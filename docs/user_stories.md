@@ -33,38 +33,38 @@
 
 ## Exceptions / Error Scenarios
 
-**Exception: Invalid login credentials**  
-If a user enters incorrect login information when trying to sign in, an error message is returned and they are asked to try again.
+1. **Exception: Invalid login credentials**  
+   If a user enters incorrect login information when trying to sign in, an error message is returned and they are asked to try again.
 
-**Exception: Duplicate account creation**  
-If a user tries to create an account with an email or username that already exists, the request is rejected and they are prompted to use a different one.
+2. **Exception: Duplicate account creation**  
+   If a user tries to create an account with an email or username that already exists, the request is rejected and they are prompted to use a different one.
 
-**Exception: Insufficient balance for bet**  
-If a user attempts to place a bet without enough virtual currency, the bet is not placed and a message is shown asking them to lower the amount.
+3. **Exception: Insufficient balance for bet**  
+   If a user attempts to place a bet without enough virtual currency, the bet is not placed and a message is shown asking them to lower the amount.
 
-**Exception: Bet placed after game start**  
-If a user tries to place a bet after the game has already started, the bet is rejected and they are informed that betting is closed.
+4. **Exception: Bet placed after game start**  
+   If a user tries to place a bet after the game has already started, the bet is rejected and they are informed that betting is closed.
 
-**Exception: Invalid bet amount**  
-If a user enters a bet amount that is zero or negative, the request is denied and they are asked to enter a valid amount.
+5. **Exception: Invalid bet amount**  
+   If a user enters a bet amount that is zero or negative, the request is denied and they are asked to enter a valid amount.
 
-**Exception: Live game data unavailable**  
-If live game data cannot be retrieved, the affected games are temporarily unavailable for betting and a notice is shown to the user.
+6. **Exception: Live game data unavailable**  
+   If live game data cannot be retrieved, the affected games are temporarily unavailable for betting and a notice is shown to the user.
 
-**Exception: Duplicate bet submission**  
-If the same bet is submitted multiple times, only one is accepted and the duplicates are ignored with a message shown.
+7. **Exception: Duplicate bet submission**  
+   If the same bet is submitted multiple times, only one is accepted and the duplicates are ignored with a message shown.
 
-**Exception: Bet resolution failure**  
-If game results are delayed or unavailable, the bet remains pending and is updated once the results are received.
+8. **Exception: Bet resolution failure**  
+   If game results are delayed or unavailable, the bet remains pending and is updated once the results are received.
 
-**Exception: Unauthorized data access**  
-If a user attempts to access another user’s information, access is denied and an authorization error is returned.
+9. **Exception: Unauthorized data access**  
+   If a user attempts to access another user’s information, access is denied and an authorization error is returned.
 
-**Exception: Internal server error**  
-If something unexpected goes wrong, a generic error message is returned and the user is asked to try again later.
+10. **Exception: Internal server error**  
+   If something unexpected goes wrong, a generic error message is returned and the user is asked to try again later.
 
-**Exception: Invalid game selection**  
-If a user tries to place a bet on a game that does not exist, the request is rejected and an error message is shown.
+11. **Exception: Invalid game selection**  
+   If a user tries to place a bet on a game that does not exist, the request is rejected and an error message is shown.
 
-**Exception: Invalid comment submission**  
-If a user submits an empty or invalid comment, it is not posted and they are prompted to enter valid content.
+12. **Exception: Invalid comment submission**  
+   If a user submits an empty or invalid comment, it is not posted and they are prompted to enter valid content.
