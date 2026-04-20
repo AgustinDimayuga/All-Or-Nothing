@@ -104,7 +104,7 @@ Returns the profile and current balance for a specific user. Users may only acce
   "user_id": "u_4f8a2c1b",
   "username": "sportzfan99",
   "balance": 850.00,
-  "total_bets": 12,
+  "total_bets": 12, 
   "wins": 7,
   "losses": 5,
   "win_rate": 0.583,
@@ -280,7 +280,7 @@ Places a new bet on behalf of the authenticated user. Deducts the wager amount f
   "game_summary": "Lakers vs Warriors",
   "team_bet_on": "Lakers",
   "amount": 50.00,
-  "odds": 1.85,
+  "odds": 1.85, /* Where odds are + or - */
   "potential_payout": 92.50,
   "status": "active",
   "placed_at": "2025-04-15T14:22:00Z",
