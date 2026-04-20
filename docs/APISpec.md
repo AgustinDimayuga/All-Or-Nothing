@@ -42,7 +42,7 @@ Creates a new user account with a starting balance of virtual currency.
   "username": "sportzfan99",
   "email": "sportzfan99@example.com",
   "balance": 1000.00,
-  "created_at": "2025-04-15T10:30:00Z"
+  "created_at": "2025-04-15T10:30:00Z" */ in year-month-day:timestamp format */ ⏲️
 }
 ```
 
@@ -70,7 +70,7 @@ Authenticates an existing user and returns a session token used in the `Authoriz
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user_id": "u_4f8a2c1b",
   "username": "sportzfan99",
-  "expires_at": "2025-04-16T10:30:00Z"
+  "expires_at": "2025-04-16T10:30:00Z" */ in year-month-day:timestamp format */ ⏲️
 }
 ```
 
@@ -108,7 +108,7 @@ Returns the profile and current balance for a specific user. Users may only acce
   "wins": 7,
   "losses": 5,
   "win_rate": 0.583,
-  "member_since": "2025-04-15T10:30:00Z"
+  "member_since": "2025-04-15T10:30:00Z" */ in year-month-day:timestamp format */ ⏲️
 }
 ```
 
@@ -164,8 +164,8 @@ Returns the full bet history for the authenticated user, including active, resol
       "odds": 1.85,
       "potential_payout": 92.50,
       "status": "won",
-      "placed_at": "2025-04-14T18:00:00Z",
-      "resolved_at": "2025-04-14T22:10:00Z"
+      "placed_at": "2025-04-14T18:00:00Z", */ in year-month-day:timestamp format */ ⏲️
+      "resolved_at": "2025-04-14T22:10:00Z" */ in year-month-day:timestamp format */ ⏲️
     }
   ]
 }
@@ -199,7 +199,7 @@ Returns a list of live and upcoming games available for betting. Optionally filt
       "sport": "basketball",
       "home_team": "Lakers",
       "away_team": "Warriors",
-      "start_time": "2025-04-15T19:30:00Z",
+      "start_time": "2025-04-15T19:30:00Z", */ in year-month-day:timestamp format */ ⏲️
       "status": "upcoming",
       "home_odds": 1.85,
       "away_odds": 2.10,
@@ -210,7 +210,7 @@ Returns a list of live and upcoming games available for betting. Optionally filt
       "sport": "football",
       "home_team": "Chiefs",
       "away_team": "Eagles",
-      "start_time": "2025-04-15T20:00:00Z",
+      "start_time": "2025-04-15T20:00:00Z", */ in year-month-day:timestamp format */ ⏲️
       "status": "live",
       "home_score": 14,
       "away_score": 10,
@@ -283,7 +283,7 @@ Places a new bet on behalf of the authenticated user. Deducts the wager amount f
   "odds": 1.85, /* Where odds are + or - */
   "potential_payout": 92.50,
   "status": "active",
-  "placed_at": "2025-04-15T14:22:00Z",
+  "placed_at": "2025-04-15T14:22:00Z", */ in year-month-day:timestamp format */ ⏲️
   "new_balance": 800.00
 }
 ```
@@ -314,7 +314,7 @@ Returns the current status and details for a single bet. Only accessible by the 
   "odds": 1.85,
   "potential_payout": 92.50,
   "status": "active",
-  "placed_at": "2025-04-15T14:22:00Z",
+  "placed_at": "2025-04-15T14:22:00Z", */ in year-month-day:timestamp format */ ⏲️
   "resolved_at": null
 }
 ```
@@ -419,7 +419,7 @@ Returns all comments posted on a specific game, ordered by most recent first. Su
       "user_id": "u_4f8a2c1b",
       "username": "sportzfan99",
       "body": "Lakers are going to dominate tonight!",
-      "posted_at": "2025-04-15T14:05:00Z"
+      "posted_at": "2025-04-15T14:05:00Z" */ in year-month-day:timestamp format */ ⏲️
     }
   ]
 }
@@ -436,7 +436,7 @@ Posts a new comment on a game. Empty or whitespace-only comments are rejected.
 **Request:**
 ```json
 {
-  "body": "Lakers are going to dominate tonight!"
+  "body": "Lakers are going to dominate tonight!" */ Where comments are no larger than 250 chars */
 }
 ```
 
@@ -447,8 +447,8 @@ Posts a new comment on a game. Empty or whitespace-only comments are rejected.
   "game_id": "g_1a2b3c4d",
   "user_id": "u_4f8a2c1b",
   "username": "sportzfan99",
-  "body": "Lakers are going to dominate tonight!",
-  "posted_at": "2025-04-15T14:05:00Z"
+  "body": "Lakers are going to dominate tonight!", */ Where comments are no larger than 250 chars */
+  "posted_at": "2025-04-15T14:05:00Z" */ in year-month-day:timestamp format */ ⏲️
 }
 ```
 
@@ -501,7 +501,7 @@ Returns a list of notifications for the authenticated user, such as bet resoluti
       "message": "Your bet on the Lakers won! You earned $92.50.",
       "bet_id": "b_9c3e7d2a",
       "read": false,
-      "created_at": "2025-04-15T22:16:00Z"
+      "created_at": "2025-04-15T22:16:00Z" */ in year-month-day:timestamp format */ ⏲️
     }
   ]
 }
