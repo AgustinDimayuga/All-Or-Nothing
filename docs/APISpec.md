@@ -161,7 +161,7 @@ Returns the full bet history for the authenticated user, including active, resol
       "game_summary": "Lakers vs Warriors",
       "team_bet_on": "Lakers",
       "amount": 50.00,
-      "odds": 1.85,
+      "odds": 1.85, /* Where odds are + or - */
       "potential_payout": 92.50,
       "status": "won",
       "placed_at": "2025-04-14T18:00:00Z", */ in year-month-day:timestamp format */ ⏲️
@@ -201,8 +201,8 @@ Returns a list of live and upcoming games available for betting. Optionally filt
       "away_team": "Warriors",
       "start_time": "2025-04-15T19:30:00Z", */ in year-month-day:timestamp format */ ⏲️
       "status": "upcoming",
-      "home_odds": 1.85,
-      "away_odds": 2.10,
+      "home_odds": 1.85, /* Where odds are + or - */
+      "away_odds": 2.10, /* Where odds are + or - */
       "venue": "Crypto.com Arena"
     },
     {
@@ -214,8 +214,8 @@ Returns a list of live and upcoming games available for betting. Optionally filt
       "status": "live",
       "home_score": 14,
       "away_score": 10,
-      "home_odds": 1.60,
-      "away_odds": 2.40,
+      "home_odds": 1.60, /* Where odds are + or - */
+      "away_odds": 2.40, /* Where odds are + or - */
       "venue": "Arrowhead Stadium"
     }
   ]
@@ -240,8 +240,8 @@ Returns full details for a single game including current scores (if live), odds,
   "away_team": "Warriors",
   "start_time": "2025-04-15T19:30:00Z",
   "status": "upcoming",
-  "home_odds": 1.85,
-  "away_odds": 2.10,
+  "home_odds": 1.85, /* Where odds are + or - */
+  "away_odds": 2.10, /* Where odds are + or - */
   "venue": "Crypto.com Arena",
   "betting_open": true,
   "total_bets_placed": 134,
@@ -311,7 +311,7 @@ Returns the current status and details for a single bet. Only accessible by the 
   "game_summary": "Lakers vs Warriors",
   "team_bet_on": "Lakers",
   "amount": 50.00,
-  "odds": 1.85,
+  "odds": 1.85, /* Where odds are + or - */
   "potential_payout": 92.50,
   "status": "active",
   "placed_at": "2025-04-15T14:22:00Z", */ in year-month-day:timestamp format */ ⏲️
