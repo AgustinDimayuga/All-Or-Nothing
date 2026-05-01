@@ -1,0 +1,28 @@
+{
+  "name": "all-or-nothing",
+  "version": "1.0.0",
+  "description": "- Agustin Xocua Dimayuga - Fabian Ballesteros-Limon - Miguel Medina - Nicolas Rosetes Beltran",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgustinDimayuga/All-Or-Nothing.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AgustinDimayuga/All-Or-Nothing/issues"
+  },
+  "homepage": "https://github.com/AgustinDimayuga/All-Or-Nothing#readme",
+  "devDependencies": {
+    "supabase": "^2.98.0"
+  }
+}
