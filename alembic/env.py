@@ -13,7 +13,8 @@ config = context.config
 config.set_main_option(
     "sqlalchemy.url",
     os.getenv(
-        "POSTGRES_URI", "postgresql+psycopg://myuser:mypassword@localhost/mydatabase"
+        "POSTGRES_URI",
+        "postgresql+psycopg://myuser:mypassword@localhost:5433/mynewprojectdb",
     ),
 )
 # Interpret the config file for Python logging.
