@@ -60,5 +60,6 @@ def get_user(username: str):
 
 def authenticate_user(username: str, password: str):
     user = get_user(username)
+
     if not user:
-        verify_passwword(password, user.hashed_password)
+        verify_passwword(password, user.has)
