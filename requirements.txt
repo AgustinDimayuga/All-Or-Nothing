@@ -2,6 +2,9 @@ alembic==1.18.4
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
+argon2-cffi==25.1.0
+argon2-cffi-bindings==25.1.0
+cffi==2.0.0
 click==8.3.3
 fastapi==0.136.1
 h11==0.16.0
@@ -17,9 +20,12 @@ pathspec==1.1.1
 pluggy==1.6.0
 psycopg==3.3.3
 psycopg-binary==3.3.3
+pwdlib==0.3.0
+pycparser==3.0
 pydantic==2.13.3
 pydantic-core==2.46.3
 pygments==2.20.0
+pyjwt==2.12.1
 pytest==9.0.3
 python-dotenv==1.2.2
 ruff==0.15.12
