@@ -116,9 +116,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-async def get_current_user(
-    connection: sqlalchemy.Connection, token: Annotated[str, Depends(oauth2_scheme)]
-):
+async def get_current_user(connection: sqlalchemy.Connection, token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -171,6 +169,13 @@ def create_user(user: PostUser):
                 {"user_id": user_id, "password": hashed_password},
             )
             # TODO: Create Wallet
+            connection.execute(
+                sqlalchemy.text("""
+                    INSERT INTO wallet (user_id,change)
+                    VALUES(:user_id,:change)
+                """),
+                {"user_id": user_id, "change": 100},
+            )
 
     except IntegrityError as e:
         raise HTTPException(
