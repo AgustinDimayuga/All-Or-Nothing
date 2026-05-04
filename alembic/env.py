@@ -8,6 +8,8 @@ from alembic import context
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
+
+
 config = context.config
 
 config.set_main_option(
@@ -17,6 +19,11 @@ config.set_main_option(
         "postgresql+psycopg://myuser:mypassword@localhost:5433/mynewprojectdb",
     ),
 )
+# uv run sync
+# npm install
+# docker run --name my-new-project-postgres -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=mypassword -e POSTGRES_DB=mynewprojectdb -p 5433:5432 -d postgres:latest
+# uv run alembic upgrade head
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
