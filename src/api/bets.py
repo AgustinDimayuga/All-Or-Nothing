@@ -46,7 +46,7 @@ class BetResponse(BaseModel):
 #     return bet_id
 
 
-@router.post("/place", response_model=BetResponse)
+@router.post("/", response_model=BetResponse)
 def place_bet(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
     user_id: int,
