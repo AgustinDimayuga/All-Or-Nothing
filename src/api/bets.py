@@ -28,7 +28,7 @@ class BetResponse(BaseModel):
     potential_payout: float
     status: str
     placed_at: str
-    new_balance: float  # Might be unnecessary
+    new_balance: float
 
 
 # @router.post("/create", status_code=status.HTTP_201_CREATED)
@@ -54,6 +54,11 @@ def place_bet(
 
     user_id = current_token_data.user_id
 
+    if new_bet.amount <= 0:
+        raise HTTPException(
+            status_code=400, detail="bet amount cannot be 0 or negative"
+        )
+
     with db.engine.begin() as connection:
 
         cur_balance = connection.execute(
@@ -68,38 +73,38 @@ def place_bet(
         if new_bet.amount > cur_balance:
             raise HTTPException(status_code=422, detail="Not enough money")
 
-        team_id = connection.execute(
-            sqlalchemy.text("""
-                SELECT id
-                FROM teams
-                WHERE name = :name
-                """),
-            [{"name": new_bet.team}],
-        ).scalar_one()
-
         get_odds = (
             connection.execute(
                 sqlalchemy.text("""
-                SELECT home_team_id, away_team_id, home_odds, away_odds
+                SELECT home_team_id, away_team_id, home_odds, away_odds, teams.id AS team_id
                 FROM games
-                WHERE id = :game_id
+                JOIN teams ON teams.id = games.home_team_id OR teams.id = games.away_team_id
+                WHERE games.id = :game_id AND teams.name = :team_name
                 """),
-                [{"game_id": new_bet.game_id}],
+                [{"game_id": new_bet.game_id, "team_name": new_bet.team}],
             )
             .mappings()
-            .one()
+            .one_or_none()
         )
 
-        if get_odds["home_team_id"] == team_id:
+        if not get_odds:
+            raise HTTPException(
+                status_code=400,
+                detail="Team is not playing or team or game does not exist",
+            )
+
+        team_id = get_odds["team_id"]
+
+        if team_id == get_odds["home_team_id"]:
             odds = get_odds["home_odds"]
-        else:
+        elif team_id == get_odds["away_team_id"]:
             odds = get_odds["away_odds"]
 
         values = (
             connection.execute(
                 sqlalchemy.text("""
-                INSERT INTO bets (user_id, game_id, team_id, odds, amount)
-                VALUES (:user_id, :game_id, :team_id, :odds, :amount)
+                INSERT INTO bets (user_id, game_id, team_id, amount)
+                VALUES (:user_id, :game_id, :team_id, :amount)
                 RETURNING id, created_at
                 """),
                 [
@@ -108,7 +113,6 @@ def place_bet(
                         "game_id": new_bet.game_id,
                         "team_id": team_id,
                         "amount": new_bet.amount,
-                        "odds": odds,
                     }
                 ],
             )
