@@ -50,6 +50,7 @@ cd All-Or-Nothing
   openssl rand -hex 32
  ```
 Paste the key given into SECRETS=
+
 3. Install packages
 Run the following to install dependencies
 ```bash
