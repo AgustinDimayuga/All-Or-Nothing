@@ -44,141 +44,54 @@ python -m pip install uv
 git clone https://github.com/AgustinDimayuga/All-Or-Nothing.git
 cd All-Or-Nothing
 ```
-
-2. Create and activate a virtual environment:
-
+2. Create .env
+  Copy env.example into a .env file and generate a random ssl key for secrets using
 ```bash
-uv venv
-source .venv/bin/activate
-```
-
-On Windows PowerShell, activate it with:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-3. Install Python dependencies:
-
+  openssl rand -hex 32
+ ```
+Paste the key given into SECRETS=
+3. Install packages
+Run the following to install dependencies
 ```bash
-uv sync
+uv run sync
+npm install
 ```
-
-If `uv sync` is unavailable, use:
-
+4. Create a docker contianer for local database
 ```bash
-python -m pip install -r requirements.txt
+docker run --name my-new-project-postgres -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=mypassword -e POSTGRES_DB=mynewprojectdb -p 5433:5432 -d postgres:latest
 ```
-
-4. Create a local environment file:
-
+5. Upgrade database
 ```bash
-cp default.env .env
+uv run alembic upgrade head
 ```
+6. Connect to Database using dbeaver
 
-5. Update `.env` with your local values:
+   
+Select host and do
+Host: localhost
+Database: postgres (make sure to select Show all databases)
+Port: 5433
 
-```env
-API_KEY=your_api_key_here
-POSTGRES_URI=postgresql+psycopg://myuser:mypassword@localhost:5433/mynewprojectdb
-```
-
-The included `default.env` shows the expected variable names. Your `.env` file should not be committed.
-
-## Database Setup
-
-Create a PostgreSQL database that matches your `POSTGRES_URI`. For the default connection string, the database settings are:
-
-- user: `myuser`
-- password: `mypassword`
-- host: `localhost`
-- port: `5433`
-- database: `mynewprojectdb`
-
-If your PostgreSQL setup uses different credentials, update `POSTGRES_URI` in `.env`.
-
-After the database exists, run the Alembic migrations:
-
+Select URL and paste: 
 ```bash
-alembic upgrade head
+jdbc:postgresql://localhost:5433/postgres
 ```
 
-## Running the API
-
-Start the development server:
-
+For Authentication:
+Username: myuser
+Password: mypassword
+7.
 ```bash
-python main.py
+uv run main.py
 ```
+Then go to 
 
-The API will run at:
-
-```text
-http://127.0.0.1:3000
-```
-
-You can also run it directly with Uvicorn:
-
-```bash
-uvicorn src.api.server:app --reload --host 127.0.0.1 --port 3000 --env-file .env
-```
-
-## Verifying the Setup
-
-Once the server is running, open:
-
-```text
-http://127.0.0.1:3000/
-```
-
-Expected response:
-
-```json
-{"status":"ok"}
-```
-
-FastAPI's interactive API docs are available at:
-
-```text
 http://127.0.0.1:3000/docs
-```
+You are done !
 
-## Useful Commands
 
-Run tests:
 
-```bash
-pytest
-```
 
-Run the linter:
+   
 
-```bash
-ruff check .
-```
 
-Run type checking:
-
-```bash
-mypy .
-```
-
-Create a new Alembic migration after changing database models:
-
-```bash
-alembic revision -m "describe change here"
-```
-
-Apply migrations:
-
-```bash
-alembic upgrade head
-```
-
-## Notes for Graders and Teammates
-
-- Use Python 3.12 to match the project configuration.
-- Copy `default.env` to `.env` before running the app.
-- Make sure PostgreSQL is running before applying migrations.
-- The app loads `default.env` first, then overrides values with `.env`.
-- The Render deployment uses `requirements.txt`, while local development can use `uv sync`.
