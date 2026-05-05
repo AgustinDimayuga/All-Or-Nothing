@@ -25,14 +25,14 @@ class Bet(BaseModel):
 class BetResponse(BaseModel):
     bet_id: int
     game_id: int
-    game_summary: str  # might remove
+    # game_summary: str  # might remove
     team_bet_on: str
     amount: float
     odds: float
     potential_payout: float
-    status: str
+    # status: str
     placed_at: str
-    new_balance: float  # Might be unnecessary
+    # new_balance: float  # Might be unnecessary
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
@@ -50,60 +50,43 @@ def create_bet(user_id: int):
     return bet_id
 
 
-# # Might remove but idk
-# @router.post("/set", status_code=status.HTTP_201_CREATED)
-# def set_bets(bet_id: int, bets: List[Bet]):
-#     with db.engine.begin() as connection:
-#         bet = connection.execute(
-#             sqlalchemy.text("""
-#                 SELECT *
-#                 FROM bets
-#                 WHERE bet_id = :bet_id
-#                 """),
-#             [{"bet_id": bet_id}],
-#         ).one()
-#
-#      connection.execute(
-#          sqlalchemy.text(
-#              """
-#              INSERT INTO
-#              """
-#          )
-#      )
-#     pass
-
-
 @router.post("/place", response_model=BetResponse)
-def place_bet(bet_id: int, new_bet: Bet):
+def place_bet(user_id: int, bet_id: int, new_bet: Bet):
     with db.engine.begin() as connection:
-        existing_bet = connection.execute(
+        odds = 2
+
+        team_id = connection.execute(
             sqlalchemy.text("""
-            SELECT *
-            FROM processed_bets
-            WHERE bet_id = :bet_id
-            """),
-            [{"bet_id": bet_id}],
-        )
+                SELECT id
+                FROM teams
+                WHERE name = :name
+                """),
+            [{"name": new_bet.team}],
+        ).scalar_one()
 
-        if existing_bet:
-            return
-
-        connection.execute(sqlalchemy.text("""
-                INSERT INTO bets (bet_id, game_id, team_bet_on, amount, odds, potential_payout)
-                VALUES ()
-                """))
-
-        odds = connection.execute(sqlalchemy.text("""
-                SELECT odds
-                FROM games
-                WHERE game_id = :game_id
-                """)).one()
+        placed_at = connection.execute(
+            sqlalchemy.text("""
+                INSERT INTO bets (user_id, game_id, team_id, amount, odds)
+                VALUES (:user_id, :game_id, :team_id, :amount, :odds)
+                RETURNING created_at
+                """),
+            [
+                {
+                    "user_id": user_id,
+                    "game_id": new_bet.game_id,
+                    "team_id": team_id,
+                    "amount": new_bet.amount,
+                    "odds": odds,
+                }
+            ],
+        ).scalar_one()
 
         return BetResponse(
             bet_id=bet_id,
             game_id=new_bet.game_id,
             team_bet_on=new_bet.team,
             amount=new_bet.amount,
+            odds=odds,
+            potential_payout=odds * new_bet.amount,
+            placed_at=placed_at,
         )
-
-    pass
