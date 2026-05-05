@@ -1,65 +1,75 @@
-from datetime import datetime, timedelta, timezone
-from os import access, name
-from typing import Annotated
-
-
-from sqlalchemy.exc import IntegrityError
-import jwt
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, oauth2
-from jwt import algorithms
-from jwt.exceptions import InvalidTokenError
-from pwdlib import PasswordHash
-from pydantic import BaseModel
-
-
-from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, Field
+from datetime import datetime
 import sqlalchemy
-from sqlalchemy.engine import create
-from src.api import auth
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from src import database as db
-
-from src.config import get_settings
-
-
-settings = get_settings()
-secret_key = settings.SECRET_KEY
-algorithm = settings.ALGORITHM
 
 router = APIRouter(
     prefix="/games",
     tags=["games"],
 )
 
-class Game(BaseModel):
-    game_id: int
-    league_id: int
-    home_team_id: int
-    away_team_id: int
-    start_time: datetime
+
+class Games(BaseModel):
+    id: int
+    sport: str
+    home_team: str
+    away_team: str
+    date: str
     location: str
 
-@router.get("/", response_model=list[Game])
-def get_games(sport: str = 'all', status: str = 'upcoming' , page: int = 1, limit: int = 20):
+
+class Description(BaseModel):
+    still_open: bool
+    venue: str
+    odds: int
+
+
+@router.get("/get_games", response_model=list[Games])
+def get_games(
+    sport: str = "all", status: str = "upcoming", page: int = 1, limit: int = 20
+) -> list[Games]:
 
     with db.engine.begin() as connection:
         games = connection.execute(
-            sqlalchemy.text(
-                """
+            sqlalchemy.text("""
                 SELECT games.id, leagues.sport, home_team.name, away_team.name, games.date, games.location
                 FROM games
                 JOIN leagues ON games.league_id = leagues.id
                 JOIN teams AS home_team ON games.home_team_id = home_team.id
                 JOIN teams AS away_team ON games.away_team_id = away_team.id
                 WHERE (:sport = 'all' OR leagues.sport = :sport)
-                """
-            ),
-            {"sport": sport}
+                """),
+            {"sport": sport},
         )
 
+    return [
+        Games(
+            id=1,
+            sport="hello",
+            home_team="home",
+            away_team="away",
+            date="date",
+            location="locations",
+        )
+    ]
 
 
+@router.get("/game_details", response_model=Description)
+def get_details(away: str, home: str):
 
+    with db.engine.begin() as connection:
+        information = connection.execute(
+            sqlalchemy.text("""
+                    SELECT  location,bets.odds
+                    FROM games
+                    JOIN bets ON bets.game_id = games.id
+                    WHERE (games.home_team_id= :home OR games.away_team_id = :away) AND games.date >= NOW()
 
+                """),
+            {"away": away, "home": home},
+        ).first()
+    if information is None:
+        raise HTTPException(status_code=404, detail="Game not found")
 
+    return {"still_open": True, "venue": information.location, "odds": information.odds}
