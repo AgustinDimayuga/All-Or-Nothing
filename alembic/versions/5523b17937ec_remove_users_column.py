@@ -21,7 +21,6 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     op.drop_column("users", "wallet_id")
-    pass
 
 
 def downgrade() -> None:

@@ -140,11 +140,11 @@ async def get_current_user(
 
 
 class PostUser(BaseModel):
+    username: str
     name: str
     email: str
-    username: str
-    password: str
     phone: str
+    password: str
 
 
 @router.post("/users", response_model=Token)
@@ -156,14 +156,14 @@ def create_user(user: PostUser):
             hashed_password = get_password_hash(user.password)
             user_id = connection.execute(
                 sqlalchemy.text("""
-                INSERT INTO users (name, email, username, phone)
-                VALUES (:name, :email, :username)
+                INSERT INTO users (username, name, email, phone)
+                VALUES (:username, :name, :email, :phone)
                 RETURNING id
                 """),
                 {
+                    "username": user.username,
                     "name": user.name,
                     "email": user.email,
-                    "username": user.username,
                     "phone": user.phone,
                 },
             ).scalar_one()
@@ -175,6 +175,7 @@ def create_user(user: PostUser):
                 """),
                 {"user_id": user_id, "password": hashed_password},
             )
+            # Give user 100 dollars as a Bonus
             connection.execute(
                 sqlalchemy.text("""
                     INSERT INTO wallet (user_id,change)
