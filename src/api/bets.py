@@ -46,16 +46,13 @@ class BetResponse(BaseModel):
 #     return bet_id
 
 
-@router.post("/place", response_model=BetResponse)
+@router.post("/", response_model=BetResponse)
 def place_bet(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
-    user_id: int,
     new_bet: Bet,
 ):
-    if current_token_data.user_id != user_id:
-        raise HTTPException(
-            status_code=401, detail="Can only place bets on your account"
-        )
+
+    user_id = current_token_data.user_id
 
     with db.engine.begin() as connection:
 
