@@ -20,9 +20,14 @@ class Games(BaseModel):
 
 
 class Description(BaseModel):
-    still_open: bool
-    venue: str
-    odds: int
+    game_id: int
+    league_id: int
+    home_id: int
+    away_id: int
+    date: datetime
+    location: str
+    home_odds: int
+    away_odds: int
 
 
 @router.get("/get_games", response_model=list[Games])
@@ -64,25 +69,36 @@ def get_games(sport: str = "all", status: str = "upcoming", page: int = 1, limit
             )
         )
 
+    if result == []:
+        raise HTTPException(status_code=404, detail="Games Not Found / Bad Input")
     return result
 
 
 @router.get("/game_details", response_model=Description)
-def get_details(away: str, home: str):
+def get_details(id: int):
 
     with db.engine.begin() as connection:
-        information = connection.execute(
+        info = connection.execute(
             sqlalchemy.text("""
-                    SELECT games.location, bets.odds
+                    SELECT *
                     FROM games
-                    JOIN teams ON games.league_id = teams.league_id
-                    JOIN bets ON bets.team_id = teams.id
-                    WHERE (teams.name = :away OR teams.name = :home)AND games.date >= NOW()
+                    WHERE games.id = :id
+
+
 
                 """),
-            {"away": away, "home": home},
+            {"id": id},
         ).first()
-    if information is None:
+    if info is None:
         raise HTTPException(status_code=404, detail="Game not found")
-    # {"still_open": True, "venue": information.location, "odds": information.odds}
-    return Description(still_open=True, venue=information.location, odds=information.odds)
+
+    return Description(
+        game_id=info.id,
+        league_id=info.league_id,
+        home_id=info.home_team_id,
+        away_id=info.away_team_id,
+        date=info.date,
+        location=info.location,
+        home_odds=info.home_odds,
+        away_odds=info.away_odds,
+    )
