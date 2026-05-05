@@ -135,10 +135,11 @@ It should respond with a code 200 and
 
 5. 
 ```bash
+# NOTE TO GRADER: Replace [REPLACE WITH YOUR TOKEN] with the access_token from step 1 or 2
 curl -X 'POST' \
   'https://all-or-nothing-r35u.onrender.com/bets/' \
   -H 'accept: application/json' \
-  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJuYW1lIjoiTWFyY28iLCJleHAiOjE3Nzc5NjM2Nzd9.3_bxOt0O-E_3DDO5F9SjbAJDYUy7ZM8Y2vKZ4EBcb1o' \
+  -H 'Authorization: Bearer [REPLACE WITH YOUR TOKEN]' \
   -H 'Content-Type: application/json' \
   -d '{
   "game_id": 1,
