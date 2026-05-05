@@ -70,7 +70,9 @@ uv run alembic upgrade head
    
 Select host and do
 Host: localhost
+
 Database: postgres (make sure to select Show all databases)
+
 Port: 5433
 
 Select URL and paste: 
@@ -79,15 +81,21 @@ jdbc:postgresql://localhost:5433/postgres
 ```
 
 For Authentication:
+
 Username: myuser
+
 Password: mypassword
+
 7.
+
 ```bash
 uv run main.py
 ```
+
 Then go to 
 
 http://127.0.0.1:3000/docs
+
 You are done !
 
 
