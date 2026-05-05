@@ -35,7 +35,9 @@ Marco is now in the game. He drinks his pre-game coffee and waits for tip-off.
 
 ## Curl commands
 
-1. curl -X 'POST' \
+1.
+```bash
+  curl -X 'POST' \
   'https://all-or-nothing-r35u.onrender.com/auth/users' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
@@ -46,6 +48,7 @@ Marco is now in the game. He drinks his pre-game coffee and waits for tip-off.
   "phone": "1234567890",
   "password": "password"
 }'
+```
 
 It should respond with a code 200 and 
 
@@ -58,12 +61,14 @@ It should respond with a code 200 and
 
 ---
 
-2. curl -X 'POST' \
+2. 
+```bash
+curl -X 'POST' \
   'https://all-or-nothing-r35u.onrender.com/auth/tokens' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'grant_type=password&username=Marco&password=password&scope=&client_id=string&client_secret=********'
-
+```
 It should respond with a code 200 and 
 ```json
 {
@@ -75,12 +80,14 @@ It is similar to the previous call
 
 ---
 
-3. curl -X 'GET' \
+3. 
+```bash
+curl -X 'GET' \
   'https://all-or-nothing-r35u.onrender.com/games/get_games?sport=Basketball&status=upcoming&page=1&limit=20' \
   -H 'accept: application/json'
-
+```
 It should respond with a code 200 and
-```json
+```bash
 [
   {
     "id": 2,
@@ -104,10 +111,12 @@ There are multiple games
 
 ---
 
-4. curl -X 'GET' \
+4. 
+```bash
+curl -X 'GET' \
   'https://all-or-nothing-r35u.onrender.com/games/game_details?id=1' \
   -H 'accept: application/json'
-
+```
 It should respond with a code 200 and
 
 ```json
@@ -124,7 +133,9 @@ It should respond with a code 200 and
 ```
 ---
 
-5. curl -X 'POST' \
+5. 
+```bash
+curl -X 'POST' \
   'https://all-or-nothing-r35u.onrender.com/bets/' \
   -H 'accept: application/json' \
   -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJuYW1lIjoiTWFyY28iLCJleHAiOjE3Nzc5NjM2Nzd9.3_bxOt0O-E_3DDO5F9SjbAJDYUy7ZM8Y2vKZ4EBcb1o' \
@@ -134,6 +145,7 @@ It should respond with a code 200 and
   "team": "Lakers",
   "amount": 50
 }'
+```
 
 It should response with a code 200 and
 
