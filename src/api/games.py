@@ -29,11 +29,11 @@ router = APIRouter(
 
 
 class Game(BaseModel):
-    game_id: int
-    league_id: int
-    home_team_id: int
-    away_team_id: int
-    start_time: datetime
+    id: int
+    sport: str
+    home_team: str
+    away_team: str
+    date: datetime
     location: str
 
 
@@ -58,10 +58,11 @@ def get_games(sport: str = "all", status: str = "upcoming", page: int = 1, limit
                 """),
             {"sport": sport},
         )
+        games = games.mappings().all()
     return games
 
 
-@router.get("/game_details", response_model=list[description])
+@router.get("/game_details", response_model=description)
 def get_details(away: str, home: str):
 
     with db.engine.begin() as connection:
@@ -70,16 +71,12 @@ def get_details(away: str, home: str):
                     SELECT  location,bets.odds
                     FROM games
                     JOIN bets ON bets.game_id = games.id
-                    WHERE games.home_team_id= :home OR games.away_team_id = :away AND games.date = NOW()
+                    WHERE (games.home_team_id= :home OR games.away_team_id = :away) AND games.date >= NOW()
 
                 """),
             {"away": away, "home": home},
         ).first()
     if information is None:
-        return None
+        raise HTTPException(status_code=404, detail="Game not found")
 
-    return {"Still open": True, "Venue": information.location, "odds": information.odds}
-
-
-# He calls GET /games/g_1a2b3c4d. The response confirms the game is still open for betting ("betting_open": true),
-# shows the venue as Crypto.com Arena, and displays the current odds.
+    return {"still_open": True, "venue": information.location, "odds": information.odds}
