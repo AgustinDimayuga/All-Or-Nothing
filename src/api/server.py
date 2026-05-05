@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.api import auth
+from src.api import auth, games
 
 app = FastAPI()
 
@@ -10,3 +10,4 @@ def root():
 
 
 app.include_router(auth.router)
+app.include_router(games.router)
