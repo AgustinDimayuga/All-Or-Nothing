@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from src.api import bets
+from src.api import auth
 
 tags_metadata = [
     {"name": "bets", "description": "make some money"},
@@ -18,3 +19,6 @@ app.include_router(bets.router)
 @app.get("/")
 def root():
     return {"status": "ok"}
+
+
+app.include_router(auth.router)
