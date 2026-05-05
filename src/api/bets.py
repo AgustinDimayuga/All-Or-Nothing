@@ -4,7 +4,7 @@ from typing import List, Annotated
 
 import sqlalchemy
 
-from src.api.user_helper import get_token_data
+from src.api.user_helper import get_token_data, TokenData
 
 from src import database as db
 
@@ -47,7 +47,16 @@ class BetResponse(BaseModel):
 
 
 @router.post("/place", response_model=BetResponse)
-def place_bet(user_id: int, new_bet: Bet):
+def place_bet(
+    current_token_data: Annotated[TokenData, Depends(get_token_data)],
+    user_id: int,
+    new_bet: Bet,
+):
+    if current_token_data.user_id != user_id:
+        raise HTTPException(
+            status_code=401, detail="Can only place bets on your account"
+        )
+
     with db.engine.begin() as connection:
 
         cur_balance = connection.execute(
