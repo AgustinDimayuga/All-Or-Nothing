@@ -15,61 +15,90 @@ class Games(BaseModel):
     sport: str
     home_team: str
     away_team: str
-    date: str
+    date: datetime
     location: str
 
 
 class Description(BaseModel):
-    still_open: bool
-    venue: str
-    odds: int
+    game_id: int
+    league_id: int
+    home_id: int
+    away_id: int
+    date: datetime
+    location: str
+    home_odds: int
+    away_odds: int
 
 
 @router.get("/get_games", response_model=list[Games])
-def get_games(
-    sport: str = "all", status: str = "upcoming", page: int = 1, limit: int = 20
-) -> list[Games]:
+def get_games(sport: str = "all", status: str = "upcoming", page: int = 1, limit: int = 20) -> list[Games]:
 
     with db.engine.begin() as connection:
-        games = connection.execute(
-            sqlalchemy.text("""
-                SELECT games.id, leagues.sport, home_team.name, away_team.name, games.date, games.location
+        rows = (
+            connection.execute(
+                sqlalchemy.text("""
+                SELECT
+                    games.id,
+                    leagues.sport,
+                    home_team.name AS home_team,
+                    away_team.name AS away_team,
+                    games.date,
+                    games.location
                 FROM games
                 JOIN leagues ON games.league_id = leagues.id
                 JOIN teams AS home_team ON games.home_team_id = home_team.id
                 JOIN teams AS away_team ON games.away_team_id = away_team.id
                 WHERE (:sport = 'all' OR leagues.sport = :sport)
-                """),
-            {"sport": sport},
+
+            """),
+                {"sport": sport},
+            )
+            .mappings()
+            .all()
+        )
+    result = []
+    for game in rows:
+        result.append(
+            Games(
+                id=game["id"],
+                sport=game["sport"],
+                home_team=game["home_team"],
+                away_team=game["away_team"],
+                date=game["date"],
+                location=game["location"],
+            )
         )
 
-    return [
-        Games(
-            id=1,
-            sport="hello",
-            home_team="home",
-            away_team="away",
-            date="date",
-            location="locations",
-        )
-    ]
+    if result == []:
+        raise HTTPException(status_code=404, detail="Games Not Found / Bad Input")
+    return result
 
 
 @router.get("/game_details", response_model=Description)
-def get_details(away: str, home: str):
+def get_details(id: int):
 
     with db.engine.begin() as connection:
-        information = connection.execute(
+        info = connection.execute(
             sqlalchemy.text("""
-                    SELECT  location,bets.odds
+                    SELECT *
                     FROM games
-                    JOIN bets ON bets.game_id = games.id
-                    WHERE (games.home_team_id= :home OR games.away_team_id = :away) AND games.date >= NOW()
+                    WHERE games.id = :id
+
+
 
                 """),
-            {"away": away, "home": home},
+            {"id": id},
         ).first()
-    if information is None:
+    if info is None:
         raise HTTPException(status_code=404, detail="Game not found")
 
-    return {"still_open": True, "venue": information.location, "odds": information.odds}
+    return Description(
+        game_id=info.id,
+        league_id=info.league_id,
+        home_id=info.home_team_id,
+        away_id=info.away_team_id,
+        date=info.date,
+        location=info.location,
+        home_odds=info.home_odds,
+        away_odds=info.away_odds,
+    )
