@@ -51,7 +51,9 @@ def upgrade() -> None:
         sa.Column("name", sa.Integer, nullable=True),
         sa.Column("email", sa.Integer, nullable=True),
         sa.Column("phone", sa.Integer, nullable=True),
-        sa.Column("user_created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column(
+            "user_created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
     )
 
     op.create_table(
@@ -74,8 +76,15 @@ def upgrade() -> None:
         sa.Column("team_id", sa.Integer, nullable=False),
         sa.Column("odds", sa.Integer, nullable=False),
         sa.Column("amount", sa.Integer, nullable=False),
-        sa.Column("resolved", sa.Boolean, server_default=sa.text("false"), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "resolved", sa.Boolean, server_default=sa.text("false"), nullable=False
+        ),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
     )
     op.create_table(
         "games",
@@ -83,7 +92,12 @@ def upgrade() -> None:
         sa.Column("league_id", sa.Integer, nullable=False),
         sa.Column("home_team_id", sa.Integer, nullable=False),
         sa.Column("away_team_id", sa.Integer, nullable=False),
-        sa.Column("date", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "date",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
         sa.Column("location", sa.String, nullable=False),
     )
     op.create_table(
@@ -104,7 +118,12 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer, nullable=False),
         sa.Column("parent_id", sa.Integer, nullable=False),
         sa.Column("body", sa.String, nullable=False),
-        sa.Column("posted_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "posted_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
     )
     # 1. Foreign key from "leagues" to "games" to fullfill the league_id
     op.create_foreign_key(
@@ -167,25 +186,39 @@ def upgrade() -> None:
     )
 
     # 7. Foreign Key from Wallet to Users to fulfill the "wallet_id" row
-    op.create_foreign_key("fk_wallet_id", "users", "wallet", ["wallet_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_wallet_id", "users", "wallet", ["wallet_id"], ["id"], ondelete="CASCADE"
+    )
 
     # 8. Foreign Key from Users to Wallet to full fill the "user_id" row
-    op.create_foreign_key("fk_user_id_wallet", "wallet", "users", ["user_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_user_id_wallet", "wallet", "users", ["user_id"], ["id"], ondelete="CASCADE"
+    )
 
     # 9.Foriegn key from Bet to wallet to full fil the "from_bet key"
-    op.create_foreign_key("fk_from_bet_bets", "wallet", "bets", ["from_bet"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_from_bet_bets", "wallet", "bets", ["from_bet"], ["id"], ondelete="CASCADE"
+    )
 
     # 10. Foreign Key From Users to Bets to full fill the "user_id" in bets
-    op.create_foreign_key("fk_user_id_bets", "bets", "users", ["user_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_user_id_bets", "bets", "users", ["user_id"], ["id"], ondelete="CASCADE"
+    )
 
     # 11 .Foreign Key from  Games to Bets to full fill the "game_id" row
-    op.create_foreign_key("fk_game_id_bets", "bets", "games", ["game_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_game_id_bets", "bets", "games", ["game_id"], ["id"], ondelete="CASCADE"
+    )
 
     # 12 .Foreign Key from  Games to Bets to full fill the "game_id" row
-    op.create_foreign_key("fk_team_id_bets", "bets", "teams", ["team_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_team_id_bets", "bets", "teams", ["team_id"], ["id"], ondelete="CASCADE"
+    )
 
     # 13. Foreign key/Primary key for
-    op.create_foreign_key("fk_user_id", "user_cred", "users", ["user_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_user_id", "user_cred", "users", ["user_id"], ["id"], ondelete="CASCADE"
+    )
 
     pass
 
@@ -198,7 +231,7 @@ def downgrade() -> None:
     op.drop_constraint("fk_league_id_teams", "teams")
     op.drop_constraint("fk_user_id-comments", "comments")
     op.drop_constraint("fk_parent_id", "comments")
-    op.drop_constraint("fk_wallet_id", "users")
+    # op.drop_constraint("fk_wallet_id", "users")
     op.drop_constraint("fk_user_id_wallet", "wallet")
     op.drop_constraint("fk_from_bet_bets", "wallet")
     op.drop_constraint("fk_user_id_bets", "bets")
