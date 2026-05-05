@@ -1,7 +1,18 @@
 from fastapi import FastAPI
-from src.api import auth, games
+from src.api import auth, games, bets
 
-app = FastAPI()
+tags_metadata = [
+    {"name": "bets", "description": "make some money"},
+]
+
+app = FastAPI(
+    title="All Or Nothing",
+    description="Website like prizepicks",
+    version="1.0",
+    openapi_tags=tags_metadata,
+)
+
+app.include_router(bets.router)
 
 
 @app.get("/")
