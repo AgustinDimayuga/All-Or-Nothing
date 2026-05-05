@@ -82,7 +82,7 @@ def get_details(id: int):
     with db.engine.begin() as connection:
         info = connection.execute(
             sqlalchemy.text("""
-                SELECT *, hteam.name AS home, ateam.name as away
+                SELECT games.id as id, games.league_id as league_id, hteam.name AS home, ateam.name as away, date, games.location as location, home_odds, away_odds 
                 FROM games
                 JOIN teams AS hteam
                     ON hteam.id = games.home_team_id
@@ -95,6 +95,7 @@ def get_details(id: int):
     if info is None:
         raise HTTPException(status_code=404, detail="Game not found")
 
+    print(info)
     return Description(
         game_id=info.id,
         league_id=info.league_id,
