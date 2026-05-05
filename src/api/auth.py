@@ -144,6 +144,7 @@ class PostUser(BaseModel):
     email: str
     username: str
     password: str
+    phone: str
 
 
 @router.post("/users", response_model=Token)
@@ -155,13 +156,17 @@ def create_user(user: PostUser):
             hashed_password = get_password_hash(user.password)
             user_id = connection.execute(
                 sqlalchemy.text("""
-                INSERT INTO users (name, email, username)
+                INSERT INTO users (name, email, username, phone)
                 VALUES (:name, :email, :username)
                 RETURNING id
                 """),
-                {"name": user.name, "email": user.email, "username": user.username},
+                {
+                    "name": user.name,
+                    "email": user.email,
+                    "username": user.username,
+                    "phone": user.phone,
+                },
             ).scalar_one()
-
             # Store password in user_creds
             connection.execute(
                 sqlalchemy.text("""
