@@ -88,43 +88,97 @@ def upgrade() -> None:
         sa.Column("posted_at", sa.DateTime(timezone=True), nullable=False),
     )
     # 1. Foreign key from "Games" from League -"id" for league_id in game
-    op.create_foreign_key("fk_games_league_id", "games", "leagues", ["league_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_games_league_id",
+        "games",
+        "leagues",
+        ["league_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
 
     # 2. Foreign key from "teams" from teams-"id" for away team id
-    op.create_foreign_key("fk_games_home_team_id", "games", "teams", ["home_team_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_games_home_team_id",
+        "games",
+        "teams",
+        ["home_team_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
 
     # 3.Foreign key from "teams" from teams-"id" for away team id
-    op.create_foreign_key("fk_home_team_id", "games", "teams", ["away_team_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_home_team_id",
+        "games",
+        "teams",
+        ["away_team_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
 
     # 4. Foreign Key from "leagues" to teams to fulfill league_id column
-    op.create_foreign_key("fk_league_id_teams", "teams", "leagues", ["league_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_league_id_teams",
+        "teams",
+        "leagues",
+        ["league_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
 
     # 5. Foreign Key from "users" to "comments" to fulfill the user_id column
-    op.create_foreign_key("fk_user_id-comments", "comments", "users", ["user_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_user_id-comments",
+        "comments",
+        "users",
+        ["user_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
 
     # 6. Foreign Key for replies on a comment made
-    op.create_foreign_key("fk_parent_id", "comments", "comments", ["parent_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_parent_id",
+        "comments",
+        "comments",
+        ["parent_id"],
+        ["id"],
+        ondelete="CASCADE",
+    )
 
     # 7. Foreign Key from Wallet to Users to fulfill the "wallet_id" row
-    op.create_foreign_key("fk_wallet_id", "users", "wallet", ["wallet_id"], ["id"], ondelete="CASCADE")
+    ####### op.create_foreign_key("fk_wallet_id", "users", "wallet", ["wallet_id"], ["id"], ondelete="CASCADE")
 
     # 8. Foreign Key from Users to Wallet to full fill the "user_id" row
-    op.create_foreign_key("fk_user_id_wallet", "wallet", "users", ["user_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_user_id_wallet", "wallet", "users", ["user_id"], ["id"], ondelete="CASCADE"
+    )
 
     # 9.Foriegn key from Bet to wallet to full fil the "from_bet key"
-    op.create_foreign_key("fk_from_bet_bets", "wallet", "bets", ["from_bet"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_from_bet_bets", "wallet", "bets", ["from_bet"], ["id"], ondelete="CASCADE"
+    )
 
     # 10. Foreign Key From Users to Bets to full fill the "user_id" in bets
-    op.create_foreign_key("fk_user_id_bets", "bets", "users", ["user_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_user_id_bets", "bets", "users", ["user_id"], ["id"], ondelete="CASCADE"
+    )
 
     # 11 .Foreign Key from  Games to Bets to full fill the "game_id" row
-    op.create_foreign_key("fk_game_id_bets", "bets", "games", ["game_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_game_id_bets", "bets", "games", ["game_id"], ["id"], ondelete="CASCADE"
+    )
 
     # 12 .Foreign Key from  Games to Bets to full fill the "game_id" row
-    op.create_foreign_key("fk_team_id_bets", "bets", "teams", ["team_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_team_id_bets", "bets", "teams", ["team_id"], ["id"], ondelete="CASCADE"
+    )
 
     # 13. Foreign key/Primary key for
-    op.create_foreign_key("fk_user_id", "user_cred", "users", ["user_id"], ["id"], ondelete="CASCADE")
+    op.create_foreign_key(
+        "fk_user_id", "user_cred", "users", ["user_id"], ["id"], ondelete="CASCADE"
+    )
 
     pass
 
@@ -137,7 +191,7 @@ def downgrade() -> None:
     op.drop_constraint("fk_league_id_teams", "teams")
     op.drop_constraint("fk_user_id-comments", "comments")
     op.drop_constraint("fk_parent_id", "comments")
-    op.drop_constraint("fk_wallet_id", "users")
+    ###### op.drop_constraint("fk_wallet_id", "users")
     op.drop_constraint("fk_user_id_wallet", "wallet")
     op.drop_constraint("fk_from_bet_bets", "wallet")
     op.drop_constraint("fk_user_id_bets", "bets")
