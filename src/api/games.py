@@ -22,15 +22,11 @@ from src import database as db
 
 from src.config import get_settings
 
-
-settings = get_settings()
-secret_key = settings.SECRET_KEY
-algorithm = settings.ALGORITHM
-
 router = APIRouter(
     prefix="/games",
     tags=["games"],
 )
+
 
 class Game(BaseModel):
     game_id: int
@@ -40,26 +36,50 @@ class Game(BaseModel):
     start_time: datetime
     location: str
 
-@router.get("/", response_model=list[Game])
-def get_games(sport: str = 'all', status: str = 'upcoming' , page: int = 1, limit: int = 20):
+
+class description(BaseModel):
+    still_open: bool
+    venue: str
+    odds: int
+
+
+@router.get("/get_games", response_model=list[Game])
+def get_games(sport: str = "all", status: str = "upcoming", page: int = 1, limit: int = 20):
 
     with db.engine.begin() as connection:
         games = connection.execute(
-            sqlalchemy.text(
-                """
+            sqlalchemy.text("""
                 SELECT games.id, leagues.sport, home_team.name, away_team.name, games.date, games.location
                 FROM games
                 JOIN leagues ON games.league_id = leagues.id
                 JOIN teams AS home_team ON games.home_team_id = home_team.id
                 JOIN teams AS away_team ON games.away_team_id = away_team.id
                 WHERE (:sport = 'all' OR leagues.sport = :sport)
-                """
-            ),
-            {"sport": sport}
+                """),
+            {"sport": sport},
         )
+    return games
 
 
+@router.get("/game_details", response_model=list[description])
+def get_details(away: str, home: str):
+
+    with db.engine.begin() as connection:
+        information = connection.execute(
+            sqlalchemy.text("""
+                    SELECT  location,bets.odds
+                    FROM games
+                    JOIN bets ON bets.game_id = games.id
+                    WHERE games.home_team_id= :home OR games.away_team_id = :away AND games.date = NOW()
+
+                """),
+            {"away": away, "home": home},
+        ).first()
+    if information is None:
+        return None
+
+    return {"Still open": True, "Venue": information.location, "odds": information.odds}
 
 
-
-
+# He calls GET /games/g_1a2b3c4d. The response confirms the game is still open for betting ("betting_open": true),
+# shows the venue as Crypto.com Arena, and displays the current odds.
