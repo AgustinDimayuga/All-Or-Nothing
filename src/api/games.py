@@ -22,16 +22,18 @@ class Games(BaseModel):
 class Description(BaseModel):
     game_id: int
     league_id: int
-    home_id: int
-    away_id: int
+    home_team: str
+    away_team: str
     date: datetime
     location: str
-    home_odds: int
-    away_odds: int
+    home_odds: float
+    away_odds: float
 
 
 @router.get("/get_games", response_model=list[Games])
-def get_games(sport: str = "all", status: str = "upcoming", page: int = 1, limit: int = 20) -> list[Games]:
+def get_games(
+    sport: str = "all", status: str = "upcoming", page: int = 1, limit: int = 20
+) -> list[Games]:
 
     with db.engine.begin() as connection:
         rows = (
@@ -80,12 +82,13 @@ def get_details(id: int):
     with db.engine.begin() as connection:
         info = connection.execute(
             sqlalchemy.text("""
-                    SELECT *
-                    FROM games
-                    WHERE games.id = :id
-
-
-
+                SELECT *, hteam.name AS home, ateam.name as away
+                FROM games
+                JOIN teams AS hteam
+                    ON hteam.id = games.home_team_id
+                JOIN teams AS ateam
+                    ON ateam.id = games.away_team_id
+                WHERE games.id = :id;
                 """),
             {"id": id},
         ).first()
@@ -95,8 +98,8 @@ def get_details(id: int):
     return Description(
         game_id=info.id,
         league_id=info.league_id,
-        home_id=info.home_team_id,
-        away_id=info.away_team_id,
+        home_team=info.home,
+        away_team=info.away,
         date=info.date,
         location=info.location,
         home_odds=info.home_odds,
