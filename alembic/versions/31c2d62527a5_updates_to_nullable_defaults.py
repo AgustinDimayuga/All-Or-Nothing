@@ -26,7 +26,7 @@ def upgrade() -> None:
     op.drop_constraint("fk_league_id_teams", "teams")
     op.drop_constraint("fk_user_id-comments", "comments")
     op.drop_constraint("fk_parent_id", "comments")
-    op.drop_constraint("fk_wallet_id", "users")
+    # op.drop_constraint("fk_wallet_id", "users")
     op.drop_constraint("fk_user_id_wallet", "wallet")
     op.drop_constraint("fk_from_bet_bets", "wallet")
     op.drop_constraint("fk_user_id_bets", "bets")
