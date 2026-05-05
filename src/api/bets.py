@@ -71,8 +71,6 @@ def place_bet(
         if new_bet.amount > cur_balance:
             raise HTTPException(status_code=422, detail="Not enough money")
 
-        odds = 2  # Hard code odds for now
-
         team_id = connection.execute(
             sqlalchemy.text("""
                 SELECT id
@@ -81,6 +79,24 @@ def place_bet(
                 """),
             [{"name": new_bet.team}],
         ).scalar_one()
+
+        get_odds = (
+            connection.execute(
+                sqlalchemy.text("""
+                SELECT home_team_id, away_team_id, home_odds, away_odds
+                FROM games
+                WHERE id = :game_id
+                """),
+                [{"game_id": new_bet.game_id}],
+            )
+            .mappings()
+            .one()
+        )
+
+        if get_odds["home_team_id"] == team_id:
+            odds = get_odds["home_odds"]
+        else:
+            odds = get_odds["away_odds"]
 
         values = (
             connection.execute(
