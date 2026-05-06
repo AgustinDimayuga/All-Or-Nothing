@@ -89,6 +89,7 @@ def get_details(id: int):
                 """),
             {"id": id},
         ).first()
+
     if info is None:
         raise HTTPException(status_code=404, detail="Game not found")
 
