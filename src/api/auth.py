@@ -90,10 +90,3 @@ async def login_for_access_token(
 
     signed_token = create_access_token({"user_id": user.user_id, "name": user.name})
     return Token(access_token=signed_token, token_type="bearer")
-
-
-@router.get("/users/me/")
-async def read_users_me(
-    current_token_data: Annotated[TokenData, Depends(get_token_data)],
-) -> TokenData:
-    return current_token_data
