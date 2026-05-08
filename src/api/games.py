@@ -30,7 +30,7 @@ class Description(BaseModel):
     away_odds: float
 
 
-@router.get("/get_games", response_model=list[Games])
+@router.get("/games", response_model=list[Games])
 def get_games(
     sport: str = "all", status: str = "upcoming", page: int = 1, limit: int = 20
 ) -> list[Games]:
@@ -38,7 +38,8 @@ def get_games(
     with db.engine.begin() as connection:
         rows = (
             connection.execute(
-                sqlalchemy.text("""
+                sqlalchemy.text(
+                    """
                 SELECT
                     games.id,
                     leagues.sport,
@@ -52,7 +53,8 @@ def get_games(
                 JOIN teams AS away_team ON games.away_team_id = away_team.id
                 WHERE (:sport = 'all' OR leagues.sport = :sport)
 
-            """),
+            """
+                ),
                 {"sport": sport},
             )
             .mappings()
@@ -81,7 +83,8 @@ def get_details(id: int):
 
     with db.engine.begin() as connection:
         info = connection.execute(
-            sqlalchemy.text("""
+            sqlalchemy.text(
+                """
                 SELECT games.id as id, games.league_id as league_id, hteam.name AS home, ateam.name as away, date, games.location as location, home_odds, away_odds 
                 FROM games
                 JOIN teams AS hteam
@@ -89,7 +92,8 @@ def get_details(id: int):
                 JOIN teams AS ateam
                     ON ateam.id = games.away_team_id
                 WHERE games.id = :id;
-                """),
+                """
+            ),
             {"id": id},
         ).first()
     if info is None:
