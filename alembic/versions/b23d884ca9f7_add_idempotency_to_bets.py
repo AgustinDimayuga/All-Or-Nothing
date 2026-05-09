@@ -44,4 +44,3 @@ def downgrade() -> None:
 
     op.drop_table("new_bet_ids")
     op.drop_table("processed_bets")
-
