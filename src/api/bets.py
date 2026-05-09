@@ -19,6 +19,10 @@ class Bet(BaseModel):
     amount: float
 
 
+class NewBetResponse(BaseModel):
+    bet_id: int
+
+
 class BetResponse(BaseModel):
     bet_id: int
     game_id: int
@@ -31,35 +35,50 @@ class BetResponse(BaseModel):
     new_balance: float
 
 
-# @router.post("/create", status_code=status.HTTP_201_CREATED)
-# def create_bet(user_id: int):
-#     with db.engine.begin() as connection:
-#         bet_id = connection.execute(
-#             sqlalchemy.text("""
-#                 INSERT INTO new_bets (user_id)
-#                 VALUES (:user_id)
-#                 RETURNING bet_id
-#                 """),
-#             [{"user_id": user_id}],
-#         ).scalar_one()
-#
-#     return bet_id
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=NewBetResponse)
+def create_bet(current_token_data: Annotated[TokenData, Depends(get_token_data)]):
+    with db.engine.begin() as connection:
+        user_id = current_token_data.user_id
+
+        bet_id = connection.execute(
+            sqlalchemy.text("""
+                INSERT INTO new_bet_ids (user_id)
+                VALUES (:user_id)
+                RETURNING bet_id
+                """),
+            [{"user_id": user_id}],
+        ).scalar_one()
+
+    return NewBetResponse(bet_id=bet_id)
 
 
-@router.post("/", response_model=BetResponse)
+@router.post("/{bet_id}/place", response_model=BetResponse)
 def place_bet(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
     new_bet: Bet,
+    bet_id: int,
 ):
 
-    user_id = current_token_data.user_id
-
-    if new_bet.amount <= 0:
-        raise HTTPException(
-            status_code=400, detail="bet amount cannot be 0 or negative"
-        )
-
     with db.engine.begin() as connection:
+
+        existing_bet = connection.execute(
+            sqlalchemy.text("""
+                SELECT 1
+                FROM processed_bets
+                WHERE bet_id = :bet_id
+                """),
+            [{"bet_id": bet_id}],
+        ).one_or_none()
+
+        if existing_bet:
+            raise HTTPException(status_code=409, detail="Bet has already been placed")
+
+        user_id = current_token_data.user_id
+
+        if new_bet.amount <= 0:
+            raise HTTPException(
+                status_code=400, detail="bet amount cannot be 0 or negative"
+            )
 
         cur_balance = connection.execute(
             sqlalchemy.text("""
@@ -103,12 +122,13 @@ def place_bet(
         values = (
             connection.execute(
                 sqlalchemy.text("""
-                INSERT INTO bets (user_id, game_id, team_id, amount)
-                VALUES (:user_id, :game_id, :team_id, :amount)
+                INSERT INTO bets (id, user_id, game_id, team_id, amount)
+                VALUES (:id, :user_id, :game_id, :team_id, :amount)
                 RETURNING id, created_at
                 """),
                 [
                     {
+                        "id": bet_id,
                         "user_id": user_id,
                         "game_id": new_bet.game_id,
                         "team_id": team_id,
@@ -132,6 +152,14 @@ def place_bet(
                     "change": new_bet.amount * -1,
                 }
             ],
+        )
+
+        connection.execute(
+            sqlalchemy.text("""
+                INSERT INTO processed_bets (bet_id, response)
+                VALUES (:bet_id, :response)
+                """),
+            [{"bet_id": bet_id, "response": 204}],
         )
 
         return BetResponse(
