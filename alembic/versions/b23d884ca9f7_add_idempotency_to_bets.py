@@ -20,6 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+
     op.create_table(
         "new_bet_ids",
         sa.Column("bet_id", sa.Integer, primary_key=True),
@@ -33,10 +34,8 @@ def upgrade() -> None:
     op.create_table(
         "processed_bets",
         sa.Column("bet_id", sa.Integer, primary_key=True),
-        sa.Column("response", sa.Integer, nullable=False),
+        sa.Column("response", sa.JSON, nullable=False),
     )
-
-    # op.add_column("bets", sa.Column("isWon", sa.Integer, nullable=True))
 
 
 def downgrade() -> None:
@@ -46,4 +45,3 @@ def downgrade() -> None:
     op.drop_table("new_bet_ids")
     op.drop_table("processed_bets")
 
-    # op.drop_column("bets", "isWon")

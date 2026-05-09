@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import List, Annotated
@@ -63,14 +65,16 @@ def place_bet(
 
         existing_bet = connection.execute(
             sqlalchemy.text("""
-                SELECT 1
+                SELECT response
                 FROM processed_bets
                 WHERE bet_id = :bet_id
                 """),
             [{"bet_id": bet_id}],
-        ).one_or_none()
+        ).scalar_one_or_none()
 
         if existing_bet:
+            return existing_bet
+
             raise HTTPException(status_code=409, detail="Bet has already been placed")
 
         user_id = current_token_data.user_id
@@ -154,15 +158,7 @@ def place_bet(
             ],
         )
 
-        connection.execute(
-            sqlalchemy.text("""
-                INSERT INTO processed_bets (bet_id, response)
-                VALUES (:bet_id, :response)
-                """),
-            [{"bet_id": bet_id, "response": 204}],
-        )
-
-        return BetResponse(
+        bet_response = BetResponse(
             bet_id=values["id"],
             game_id=new_bet.game_id,
             team_bet_on=new_bet.team,
@@ -173,3 +169,13 @@ def place_bet(
             placed_at=str(values["created_at"]),
             new_balance=cur_balance - new_bet.amount,
         )
+
+        connection.execute(
+            sqlalchemy.text("""
+                INSERT INTO processed_bets (bet_id, response)
+                VALUES (:bet_id, :response)
+                """),
+            [{"bet_id": bet_id, "response": json.dumps(bet_response.model_dump())}],
+        )
+
+        return bet_response
