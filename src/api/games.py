@@ -1,7 +1,10 @@
 from datetime import datetime
+from enum import Enum
+from typing import Sequence
 import sqlalchemy
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.engine import RowMapping
 from src import database as db
 
 router = APIRouter(
@@ -30,50 +33,78 @@ class Description(BaseModel):
     away_odds: float
 
 
-@router.get("/get_games", response_model=list[Games])
+def map_games(games: Sequence[RowMapping]):
+    return [
+        Games(
+            id=game["id"],
+            sport=game["sport"],
+            home_team=game["home_team"],
+            away_team=game["away_team"],
+            date=game["date"],
+            location=game["location"],
+        )
+        for game in games
+    ]
+
+
+class League(str, Enum):
+    NBA = "nba"
+    MLS = "mls"
+    NHL = "nhl"
+
+
+class Status(str, Enum):
+    upcoming = "upcoming"
+    live = "live"
+    finished = "finished"
+
+
+@router.get("/games", response_model=list[Games])
 def get_games(
-    sport: str = "all", status: str = "upcoming", page: int = 1, limit: int = 20
+    league: League,
+    status: Status,
+    page: int = 1,
+    limit: int = 20,
 ) -> list[Games]:
+    offset = (page - 1) * limit
 
     with db.engine.begin() as connection:
-        rows = (
+        games = (
             connection.execute(
                 sqlalchemy.text("""
-                SELECT
-                    games.id,
-                    leagues.sport,
-                    home_team.name AS home_team,
-                    away_team.name AS away_team,
-                    games.date,
-                    games.location
-                FROM games
-                JOIN leagues ON games.league_id = leagues.id
-                JOIN teams AS home_team ON games.home_team_id = home_team.id
-                JOIN teams AS away_team ON games.away_team_id = away_team.id
-                WHERE (:sport = 'all' OR leagues.sport = :sport)
+                SELECT * FROM (
+                    SELECT
+                        games.id,
+                        leagues.sport,
+                        home_team.name AS home_team,
+                        away_team.name AS away_team,
+                        games.date,
+                        games.location,
+                        CASE
+                            WHEN NOW() < date THEN 'upcoming'
+                            WHEN NOW() < date + INTERVAL '2 hours' THEN 'live'
+                            ELSE 'finished'
+                        END AS status
+                    FROM games
+                    JOIN leagues ON games.league_id = leagues.id
+                    JOIN teams AS home_team ON games.home_team_id = home_team.id
+                    JOIN teams AS away_team ON games.away_team_id = away_team.id
+                    WHERE leagues.name = :league
+                ) AS subquery
+                WHERE status = :status
+                OFFSET :offset
+                LIMIT :limit
 
             """),
-                {"sport": sport},
+                {"league": league, "status": status, "offset": offset, "limit": limit},
             )
             .mappings()
             .all()
         )
-    result = []
-    for game in rows:
-        result.append(
-            Games(
-                id=game["id"],
-                sport=game["sport"],
-                home_team=game["home_team"],
-                away_team=game["away_team"],
-                date=game["date"],
-                location=game["location"],
-            )
-        )
 
-    if result == []:
+    if not games:
         raise HTTPException(status_code=404, detail="Games Not Found / Bad Input")
-    return result
+    return map_games(games)
 
 
 @router.get("/game_details", response_model=Description)
