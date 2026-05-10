@@ -2,10 +2,13 @@ from datetime import datetime
 from enum import Enum
 from typing import Sequence
 import sqlalchemy
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.engine import RowMapping
 from src import database as db
+from src.api.user_helper import get_token_data, TokenData
+
+from typing import Annotated
 
 router = APIRouter(
     prefix="/games",
@@ -136,4 +139,36 @@ def get_details(id: int):
         location=info.location,
         home_odds=info.home_odds,
         away_odds=info.away_odds,
+    )
+
+
+class Post_Comment_Response(BaseModel):
+    comment_id: int
+    posted_at: datetime
+    body: str
+
+
+@router.post("/{game_od}/comments", response_model=Post_Comment_Response)
+def post_comment(
+    body: str,
+    game_id: int,
+    current_token_data: Annotated[TokenData, Depends(get_token_data)],
+):
+
+    if not body:
+        raise HTTPException(
+            status_code=400,
+            detail={"error_code": "INVALID_COMMENT", "message": "Body cannot be empty"},
+        )
+    with db.engine.begin() as connection:
+        comment = connection.execute(
+            sqlalchemy.text("""
+            INSERT INTO COMMENTS (user_id,body,game_id)
+            VALUES (:user_id, :body,:game_id)
+            RETURNING id, body, posted_at
+            """),
+            {"user_id": current_token_data.user_id, "body": body, "game_id": game_id},
+        ).one()
+    return Post_Comment_Response(
+        comment_id=comment.id, posted_at=comment.posted_at, body=comment.body
     )

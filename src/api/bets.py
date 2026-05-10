@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from typing import List, Annotated
+from typing import Annotated
 
 import sqlalchemy
 
@@ -76,10 +76,16 @@ def place_bet(
         get_odds = (
             connection.execute(
                 sqlalchemy.text("""
-                SELECT home_team_id, away_team_id, home_odds, away_odds, teams.id AS team_id
+                SELECT * 
+                FROM (SELECT home_team_id, away_team_id, home_odds, away_odds, teams.id AS team_id,      
+                        CASE
+                            WHEN NOW() < date THEN 'upcoming'
+                            WHEN NOW() < date + INTERVAL '2 hours' THEN 'live'
+                            ELSE 'finished'
+                        END AS status
                 FROM games
                 JOIN teams ON teams.id = games.home_team_id OR teams.id = games.away_team_id
-                WHERE games.id = :game_id AND teams.name = :team_name
+                WHERE games.id = :game_id AND teams.name = :team_name ) WHERE status = 'upcoming'
                 """),
                 [{"game_id": new_bet.game_id, "team_name": new_bet.team}],
             )
@@ -90,7 +96,7 @@ def place_bet(
         if not get_odds:
             raise HTTPException(
                 status_code=400,
-                detail="Team is not playing or team or game does not exist",
+                detail="Team is not playing or Game Already Started",
             )
 
         team_id = get_odds["team_id"]
