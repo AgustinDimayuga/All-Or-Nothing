@@ -1,6 +1,8 @@
+from enum import Enum
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Annotated
+from datetime import datetime
 
 
 import sqlalchemy
@@ -150,5 +152,3 @@ def place_bet(
             placed_at=str(values["created_at"]),
             new_balance=cur_balance - new_bet.amount,
         )
-
-    return
