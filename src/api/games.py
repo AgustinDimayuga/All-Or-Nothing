@@ -1,8 +1,9 @@
-from datetime import datetime
+from ast import List
+from datetime import date, datetime
 from enum import Enum
 from typing import Sequence
 import sqlalchemy
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy.engine import RowMapping
 from src import database as db
@@ -148,7 +149,7 @@ class Post_Comment_Response(BaseModel):
     body: str
 
 
-@router.post("/{game_od}/comments", response_model=Post_Comment_Response)
+@router.post("/{game_id}/comments", response_model=Post_Comment_Response)
 def post_comment(
     body: str,
     game_id: int,
@@ -172,3 +173,94 @@ def post_comment(
     return Post_Comment_Response(
         comment_id=comment.id, posted_at=comment.posted_at, body=comment.body
     )
+
+
+class Comment(BaseModel):
+    comment_id: int
+    user_id: int
+    username: str
+    body: str
+    posted_at: datetime
+
+
+def map_comments(comments: Sequence[RowMapping]) -> list[Comment]:
+    return [
+        Comment(
+            comment_id=comment["comment_id"],
+            user_id=comment["user_id"],
+            username=comment["username"],
+            body=comment["body"],
+            posted_at=comment["posted_at"],
+        )
+        for comment in comments
+    ]
+
+
+@router.get("/{game_id}/comments", response_model=list[Comment])
+def get_comments(
+    game_id: int,
+    page: int = 1,
+    limit: int = 20,
+) -> list[Comment]:
+    offset = (page - 1) * limit
+    with db.engine.begin() as connection:
+        game = connection.execute(
+            sqlalchemy.text("""
+            SELECT id FROM games WHERE id = :game_id
+        """),
+            {"game_id": game_id},
+        ).fetchone()
+
+        if game is None:
+            raise HTTPException(status_code=404, detail="Game not found")
+
+        comments = (
+            connection.execute(
+                sqlalchemy.text("""
+            SELECT c.id AS comment_id, c.user_id, u.name AS username, c.body, c.posted_at 
+            FROM games
+            JOIN "comments" c ON c.game_id = games.id
+            JOIN users u  ON c.user_id = u.id 
+            WHERE games.id = :game_id
+            OFFSET :offset
+            LIMIT :limit
+        """),
+                {"game_id": game_id, "offset": offset, "limit": limit},
+            )
+            .mappings()
+            .all()
+        )
+    return map_comments(comments)
+
+
+@router.delete("/{game_id}/comments/{comment_id}", response_class=Response)
+def delete_comment(
+    game_id: int,
+    current_token_data: Annotated[TokenData, Depends(get_token_data)],
+    comment_id: int,
+):
+    with db.engine.begin() as connection:
+        comment = connection.execute(
+            sqlalchemy.text("""
+            SELECT user_id
+            FROM comments
+            WHERE id = :comment_id
+            """),
+            {"comment_id": comment_id},
+        ).scalar_one_or_none()
+        if not comment:
+            raise HTTPException(status_code=404, detail="Comment does not exist")
+        if comment != current_token_data.user_id:
+            raise HTTPException(
+                status_code=403, detail="You can only delete your comments"
+            )
+        result = connection.execute(
+            sqlalchemy.text("""
+                DELETE FROM comments
+                WHERE id = :comment_id
+                """),
+            {"comment_id": comment_id},
+        )
+        if not result.rowcount:
+            raise HTTPException(status_code=500, detail="Error deleting comment...")
+    return Response(status_code=204)
