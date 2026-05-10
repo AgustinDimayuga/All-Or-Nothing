@@ -51,9 +51,14 @@ def get_games(
                 JOIN teams AS home_team ON games.home_team_id = home_team.id
                 JOIN teams AS away_team ON games.away_team_id = away_team.id
                 WHERE (:sport = 'all' OR leagues.sport = :sport)
+                LIMIT :limit
+                OFFSET :offset
 
             """),
-                {"sport": sport},
+                {"sport": sport,
+                "limit": limit,
+                "offset": (page-1) * limit,},
+            
             )
             .mappings()
             .all()

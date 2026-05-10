@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import List, Annotated
+from datetime import datetime
 
 import sqlalchemy
 
@@ -29,6 +30,24 @@ class BetResponse(BaseModel):
     status: str
     placed_at: str
     new_balance: float
+
+class UserBet(BaseModel):
+    bet_id: int
+    game_id: int
+    team_bet_on: str
+    amount: float
+    odds: float
+    potential_payout: float
+    status: str
+    placed_at:str
+
+
+class TotalUserBets(BaseModel):
+    user_id: int
+    status: str
+    total:int
+    bets:list[UserBet]
+
 
 
 # @router.post("/create", status_code=status.HTTP_201_CREATED)
@@ -145,3 +164,167 @@ def place_bet(
             placed_at=str(values["created_at"]),
             new_balance=cur_balance - new_bet.amount,
         )
+
+@router.get("/users/{user_id}/bets")
+def get_user_bets(user_id: int, status:str = "all"):
+
+    if status not in ['all', 'won', 'lost']:
+        raise HTTPException(
+            status_code=400,
+            detail = "Please enter a valid status"
+        )
+
+    
+    if status == "won":
+
+        with db.engine.begin() as connection:
+
+            bets =connection.execute(
+                sqlalchemy.text(
+                    """
+                    SELECT
+                    bets.id, bets.game_id, teams.name, bets.amount,
+
+                    CASE
+                        WHEN bets.team_id = games.home_team_id THEN games.home_odds
+                        WHEN bets.team_id = games.away_team_id THEN games.away_odds
+                    
+                    END AS odds,
+
+                    CASE
+                        WHEN bets.team_id = games.home_team_id THEN games.home_odds * bets.amount
+                        WHEN bets.team_id = games.away_team_id THEN games.away_odds * bets.amount
+                    
+                    END AS potential_payout,
+
+                    bets.resolved,
+                    bets.created_at
+                    FROM bets
+
+                    JOIN games ON bets.game_id = games.id
+                    JOIN teams ON bets.team_id = teams.id
+
+                    WHERE (bets.user_id = :user_id) AND (bets.team_id = games.winning_team_id) AND (games.winning_team_id IS NOT NULL) AND (bets.resolved = true)
+                    """
+                ),
+                {"user_id": user_id},
+            ).all()
+            bets_list = []
+
+            for bet in bets:
+                bets_list.append(UserBet(bet_id=bet[0], game_id=bet[1], team_bet_on=bet[2], amount=bet[3], odds=bet[4], potential_payout=bet[5], status="won", placed_at=str(bet[7])))
+    
+        
+        return TotalUserBets(user_id= user_id,
+                             status= 'won',
+                             total= len(bets_list),
+                             bets= bets_list
+                            )
+    
+    
+    if status == 'lost':
+        
+        with db.engine.begin() as connection:
+            bets = connection.execute(
+                sqlalchemy.text(
+                    """
+                    SELECT
+                    bets.id, bets.game_id, teams.name, bets.amount,
+
+                    CASE
+                        WHEN bets.team_id = games.home_team_id THEN games.home_odds
+                        WHEN bets.team_id = games.away_team_id THEN games.away_odds
+                    
+                    END AS odds,
+
+                    CASE
+                        WHEN bets.team_id = games.home_team_id THEN games.home_odds * bets.amount
+                        WHEN bets.team_id = games.away_team_id THEN games.away_odds * bets.amount
+                    
+                    END AS potential_payout,
+
+                    bets.resolved,
+                    bets.created_at
+                    FROM bets
+
+                    JOIN games ON bets.game_id = games.id
+                    JOIN teams ON bets.team_id = teams.id
+
+                    WHERE (bets.user_id = :user_id) AND (bets.team_id != games.winning_team_id) AND (games.winning_team_id IS NOT NULL) AND (bets.resolved = true)
+                    """
+                ),
+                {"user_id": user_id}
+            ).all()
+
+            bets_list = []
+
+            for bet in bets:
+                bets_list.append(UserBet(bet_id=bet[0], game_id=bet[1], team_bet_on=bet[2], amount=bet[3], odds=bet[4], potential_payout=bet[5], status='lost', placed_at=str(bet[7])))
+        
+        return TotalUserBets(user_id= user_id,
+                             status='lost',
+                             total= len(bets_list),
+                             bets= bets_list)
+    
+
+    else:
+
+        with db.engine.begin() as connection:
+            bets = connection.execute(
+                sqlalchemy.text(
+                    """
+                    SELECT
+                    bets.id, bets.game_id, teams.name, bets.amount,
+
+                    CASE
+                        WHEN bets.team_id = games.home_team_id THEN games.home_odds
+                        WHEN bets.team_id = games.away_team_id THEN games.away_odds
+                    
+                    END AS odds,
+
+                    CASE
+                        WHEN bets.team_id = games.home_team_id THEN games.home_odds * bets.amount
+                        WHEN bets.team_id = games.away_team_id THEN games.away_odds * bets.amount
+                    
+                    END AS potential_payout,
+
+                    bets.resolved,
+                    bets.created_at,
+                    games.winning_team_id,
+                    bets.team_id
+                    FROM bets
+
+                    JOIN games ON bets.game_id = games.id
+                    JOIN teams ON bets.team_id = teams.id
+
+                    WHERE (bets.user_id = :user_id) AND (games.winning_team_id IS NOT NULL) AND (bets.resolved = true)
+                    """
+                ),
+                {"user_id": user_id}
+            ).all()
+
+            bets_list = []
+
+            for bet in bets:
+
+                if bet[8] == bet[9]:
+                    bets_list.append(UserBet(bet_id=bet[0], game_id=bet[1], team_bet_on=bet[2], amount=bet[3], odds=bet[4], potential_payout=bet[5], status='won', placed_at=str(bet[7])))
+                
+                elif bet[8] != bet[9]:
+                     bets_list.append(UserBet(bet_id=bet[0], game_id=bet[1], team_bet_on=bet[2], amount=bet[3], odds=bet[4], potential_payout=bet[5], status='lost', placed_at=str(bet[7])))
+        
+        return TotalUserBets(user_id= user_id,
+                             status='all',
+                             total= len(bets_list),
+                             bets= bets_list)
+
+
+        
+
+
+
+        
+
+
+
+
