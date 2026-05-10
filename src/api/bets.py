@@ -2,15 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import List, Annotated
 
+from src.config import get_settings
+
+
 import sqlalchemy
-
 from src.api.user_helper import get_token_data, TokenData
-
 from src import database as db
 
-router = APIRouter(
-    prefix="/bets", tags=["bets"], dependencies=[Depends(get_token_data)]
-)
+import requests
+import os
+import random
+
+router = APIRouter(prefix="/bets", tags=["bets"], dependencies=[Depends(get_token_data)])
 
 
 class Bet(BaseModel):
@@ -55,9 +58,7 @@ def place_bet(
     user_id = current_token_data.user_id
 
     if new_bet.amount <= 0:
-        raise HTTPException(
-            status_code=400, detail="bet amount cannot be 0 or negative"
-        )
+        raise HTTPException(status_code=400, detail="bet amount cannot be 0 or negative")
 
     with db.engine.begin() as connection:
 
@@ -145,3 +146,7 @@ def place_bet(
             placed_at=str(values["created_at"]),
             new_balance=cur_balance - new_bet.amount,
         )
+
+
+
+    return
