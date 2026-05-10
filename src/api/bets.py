@@ -32,21 +32,6 @@ class BetResponse(BaseModel):
     new_balance: float
 
 
-# @router.post("/create", status_code=status.HTTP_201_CREATED)
-# def create_bet(user_id: int):
-#     with db.engine.begin() as connection:
-#         bet_id = connection.execute(
-#             sqlalchemy.text("""
-#                 INSERT INTO new_bets (user_id)
-#                 VALUES (:user_id)
-#                 RETURNING bet_id
-#                 """),
-#             [{"user_id": user_id}],
-#         ).scalar_one()
-#
-#     return bet_id
-
-
 @router.post("/", response_model=BetResponse)
 def place_bet(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
