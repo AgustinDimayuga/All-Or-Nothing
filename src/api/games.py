@@ -52,9 +52,8 @@ def map_games(games: Sequence[RowMapping]):
 
 
 class League(str, Enum):
-    NBA = "nba"
-    MLS = "mls"
-    NHL = "nhl"
+    NLB = "nlb"
+    WORLD_CUP = "world_cup"
 
 
 class Status(str, Enum):
@@ -96,6 +95,7 @@ def get_games(
                     WHERE leagues.name = :league
                 ) AS subquery
                 WHERE status = :status
+                ORDER BY date ASC
                 OFFSET :offset
                 LIMIT :limit
 
@@ -222,6 +222,7 @@ def get_comments(
             JOIN "comments" c ON c.game_id = games.id
             JOIN users u  ON c.user_id = u.id 
             WHERE games.id = :game_id
+            ORDER BY c.posted_at ASC
             OFFSET :offset
             LIMIT :limit
         """),

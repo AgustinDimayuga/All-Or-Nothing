@@ -10,7 +10,9 @@ import sqlalchemy
 from src.api.user_helper import *
 from src import database as db
 
-router = APIRouter(prefix="/users", tags=["User"])
+router = APIRouter(
+    prefix="/users", tags=["user"], dependencies=[Depends(get_token_data)]
+)
 
 
 class Active_bets(BaseModel):
@@ -27,7 +29,9 @@ class Balance(BaseModel):
 
 
 @router.get("/active_bets", response_model=list[Active_bets])
-def get_active_bets(user_id: int) -> list[Active_bets]:
+def get_active_bets(
+    current_token_data: Annotated[TokenData, Depends(get_token_data)],
+) -> list[Active_bets]:
 
     with db.engine.begin() as connection:
         information = connection.execute(
@@ -43,18 +47,21 @@ def get_active_bets(user_id: int) -> list[Active_bets]:
             JOIN games ON games.id = bets.game_id
             WHERE bets.user_id = :id AND bets.resolved = FALSE
             """),
-            {"id": user_id},
+            {"id": current_token_data.user_id},
         ).all()
 
-    bets = []
-    for info in information:
-        bets.append(Active_bets(team=info.name, wagered=info.amount, potential= round(info.amount +info.amount * info.odds,2)))
+    return [
+        Active_bets(
+            team=info.name,
+            wagered=info.amount,
+            potential=round(info.amount + info.amount * info.odds, 2),
+        )
+        for info in information
+    ]
 
-    return bets
 
-
-@router.get("/Get_Balance", response_model=Balance)
-def get_balance(user_id: int):
+@router.get("/balance", response_model=Balance)
+def get_balance(current_token_data: Annotated[TokenData, Depends(get_token_data)]):
 
     with db.engine.begin() as connection:
         money = connection.execute(
@@ -64,7 +71,7 @@ def get_balance(user_id: int):
             WHERE wallet.user_id = :id
 
             """),
-            {"id": user_id},
+            {"id": current_token_data.user_id},
         )
     money = money.scalar_one()
     if money == None:

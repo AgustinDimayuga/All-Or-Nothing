@@ -13,7 +13,6 @@ class Settings:
     SECRET_KEY: str | None = os.getenv("SECRET_KEY")
     ALGORITHM: str | None = os.getenv("ALGORITHM")
 
-
     def __init__(self):
         if not self.API_KEY:
             raise ValueError("API_KEY is missing.")
@@ -23,7 +22,6 @@ class Settings:
             raise ValueError("SECRET_KEY is missing.")
         if not self.ALGORITHM:
             raise ValueError("ALGORITHM is missing.")
-
 
 
 @lru_cache()
