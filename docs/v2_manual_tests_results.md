@@ -163,7 +163,7 @@ You should get a response like so
 }
 ```
 
-6. You will now place a bet on an ongoing bet. Don't forget your JWT.
+6. You will now place a bet on an ongoing game. Don't forget your JWT.
 ```bash
 curl -X 'POST' \
   'https://all-or-nothing-r35u.onrender.com/bets/' \
