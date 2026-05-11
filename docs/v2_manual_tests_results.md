@@ -126,7 +126,7 @@ You will recieve a 200 code and all the comments for the game
 ]
 ```
 
-4. You will not attempt to post empty comment as priya. Using the JWT recieved you will call 
+4. You will now attempt to post empty comment as priya. Using the JWT recieved you will call 
 ```bash
 curl -X 'POST' \
   'https://all-or-nothing-r35u.onrender.com/games/1398/comments?body=' \
