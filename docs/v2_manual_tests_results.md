@@ -1,5 +1,30 @@
 
 ## Example WorkFlow 2
+Sofia is a returning bettor who placed three bets earlier in the day on different NFL games. She wants to monitor how her picks are doing, and later finds out the results when the games finish.
+
+Sofia logs back in to check her active bets:
+
+- She calls `POST /auth/tokens` and receives a fresh JWT token.
+- She calls `GET /users/u_7b9d1e3f/bets?status=active`. The response lists her three active bets across different games, showing each team she backed, the amounts wagered, and potential payouts.
+
+She checks her balance to see how much she has left to wager:
+
+- She calls `GET /users/u_7b9d1e3f/balance`. The response shows she has **$620.00** remaining.
+
+Sofia wants details on one of her games that just went live:
+
+- She calls `GET /games/g_5e6f7g8h`. The response shows the game is now `"status": "live"` with a current score of Chiefs 14, Eagles 10 — her bet is on the Chiefs, so things are looking good.
+
+Later that evening, the Chiefs game concludes. The system automatically resolves all bets:
+
+- The backend triggers `POST /bets/resolve` internally with `game_id: g_5e6f7g8h` and `winning_team: "Chiefs"`. The server resolves 98 bets, pays out winners, and creates a notification for every affected user including Sofia.
+
+
+Sofia checks her updated balance after the game is over:
+
+- She calls `GET /users/u_7b9d1e3f/balance`. Her balance is now **$795.00**, reflecting the payout. She heads to the leaderboard to see if she climbed the rankings.
+## Testing Results
+
 ## Example WorkFlow 3
 ## Example WorkFlow 4
 Priya is watching a live soccer match on TV and wants to join the conversation on All-Or-Nothing. She also tries to place a late bet and encounters an error.
