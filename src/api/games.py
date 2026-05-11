@@ -62,7 +62,7 @@ class Status(str, Enum):
     finished = "finished"
 
 
-@router.get("/games", response_model=list[Games])
+@router.get("/", response_model=list[Games])
 def get_games(
     league: League,
     status: Status,
@@ -111,7 +111,8 @@ def get_games(
     return map_games(games)
 
 
-@router.get("/game_details", response_model=Description)
+# @router.get("/game_details", response_model=Description)
+@router.get("/{game_id}/details", response_model=Description)
 def get_details(id: int):
 
     with db.engine.begin() as connection:
