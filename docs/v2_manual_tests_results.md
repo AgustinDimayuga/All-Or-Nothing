@@ -91,7 +91,7 @@ You will recieve a response code 200 and something like this
 ]
 ```
 
-3. We will now grab an id and call `GET /comments/` for a game that has already started 
+3. We will now grab the id 1398 and work with the Giants vs. Yankees game. So  you will now call `GET /comments/` which note is a game that has already started.
 ```bash
 curl -X 'GET' \
   'https://all-or-nothing-r35u.onrender.com/games/1398/comments?page=1&limit=20' \
