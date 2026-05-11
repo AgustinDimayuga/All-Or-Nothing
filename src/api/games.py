@@ -62,7 +62,7 @@ class Status(str, Enum):
     finished = "finished"
 
 
-@router.get("/games", response_model=list[Games])
+@router.get("/", response_model=list[Games])
 def get_games(
     league: League,
     status: Status,
