@@ -65,7 +65,7 @@ curl -X 'POST' \
   'https://all-or-nothing-r35u.onrender.com/auth/tokens' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=password&username=priya&password=string&scope=&client_id=string&client_secret='
+  -d 'grant_type=password&username=Priya&password=string&scope=&client_id=string&client_secret='
 ```
 You will recieve a response code 200 and something like this 
 ```json
