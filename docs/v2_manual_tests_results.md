@@ -51,7 +51,7 @@ You will recieve a response code 200 and something like this
 
 
 > [!NOTE]
-> Please note you will not recieve the same access token as the example response above. Copy this JWT and use it accordingly as explained below
+> Please note you will not recieve the same access token as the example response above. Copy your unique JWT and use it accordingly as explained below
 
 2. You will now call `GET /games?league=nlb&status=finished&page=1&limit=20`. See how the query parameter used here are status=finished. This is to ensure you get a GAME_STARTED error, since we cannot ensure a game is live when you are grading. 
 
