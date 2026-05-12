@@ -22,9 +22,137 @@ Later that evening, the Chiefs game concludes. The system automatically resolves
 
 Sofia checks her updated balance after the game is over:
 
-- She calls `GET /users/u_7b9d1e3f/balance`. Her balance is now **$795.00**, reflecting the payout. She heads to the leaderboard to see if she climbed the rankings.
+- She calls `GET /users/u_7b9d1e3f/balance`. Her balance is now **$795.00**, reflecting the payout. 
 ## Testing Results
+1. You will call `POST /auth/tokens and will be signing in as Sofia. A premade account for you to act as Sofia.
+   ```Bash
+    curl -X 'POST' \
+    'https://all-or-nothing-r35u.onrender.com/auth/tokens' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'grant_type=password&username=Sofia&password=string&scope=&client_id=string&client_secret=********'
+   ```
+   You will receive a response code 200 and something like this
 
+   ```json
+    {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3LCJuYW1lIjoiU29maWEiLCJleHAiOjE3Nzg1NTU5NTN9.ZGprxn_8JBMr_4hXhz4-ds0y3gOV8ra_z5ptBQV3iEA",
+    "token_type": "bearer"
+    }
+   ```
+>[!NOTE]
+> Please not you will not recieve the same acess token as the example ressponse above.Copy your unique JWT and use it accordingly as explained below.
+
+2. Sofia is then ready for a brand new of betting
+   - so she places a bet using `POST/bets`
+>[!NOTE]
+> NOTE TO GRADER: Replace [REPLACE IWTH YOUR TOKEN] with the access toke from step 1
+> The other paramaters and results will be up to you based on what games are available through the get games endpoint with the "upcoming" filter.
+   
+   ```bash
+    curl -X 'POST' \
+    'https://all-or-nothing-r35u.onrender.com/bets/' \
+    -H 'accept: application/json' \
+    -H 'Authorization: Bearer [REPLACE WITH YOUR TOKEN] \
+    -H 'Content-Type: application/json' \
+    -d '{
+    "game_id": 1731,
+    "team": "Brewers",
+    "amount": 100
+    }
+   ```
+   You should receive something like this:
+   ``` json
+    {
+    "bet_id": 8,
+    "game_id": 1731,
+    "team_bet_on": "Brewers",
+    "amount": 100,
+    "odds": 2.06364422354296,
+    "potential_payout": 206.364422354296,
+    "status": "active",
+    "placed_at": "2026-05-12 02:42:28.486169+00:00",
+    "new_balance": 900
+    }
+   ```
+Just to make sure her bet was processed correctly she runs `GET /users/u_7b9d1e3f/bets?status=active` to check her active bets
+   ```Bash
+   curl -X 'GET' \
+    'https://all-or-nothing-r35u.onrender.com/users/me/bets?status=pending&page=1&limit=20' \
+    -H 'accept: application/json' \
+    -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3LCJuYW1lIjoiU29maWEiLCJleHAiOjE3Nzg1NTg1OTd9.KsCiyIEM4Gfl762_9IOLcm7orMLPn5r5HIJuvt2YgCI'
+   ```
+You should recieve something like this:
+   ```json
+    {
+    "user_id": 7,
+    "status": "pending",
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "returned": 1,
+    "bets": [
+      {
+        "bet_id": 8,
+        "game_id": 1731,
+        "team_id": 64,
+        "team_bet_on": "Brewers",
+        "amount": 100,
+        "odds": 2.06364422354296,
+        "potential_payout": 206.364422354296,
+        "status": "pending",
+        "placed_at": "2026-05-12T02:42:28.486169Z"
+      }
+      ]
+    }
+   ```
+3. After an hour of working on her potion shop, Sofia decides to check up on the game she bet on 
+  - So she runs `GET /games/g_5e6f7g8h` with the `"status: "live"`
+    ```bash
+    curl -X 'GET' \
+    'https://all-or-nothing-r35u.onrender.com/games/?league=nlb&status=live&page=1&limit=20' \
+    -H 'accept: application/json'
+    ```
+  - And the output should look something like:
+    ```json
+    [
+      {
+        "id": 862,
+        "sport": "baseball",
+        "home_team": "Dodgers",
+        "away_team": "Giants",
+        "date": "2026-05-12T02:10:00Z",
+        "location": "UNIQLO Field at Dodger Stadium"
+      }
+    ]
+    ```
+>[!WARNING]
+>This is not something that the Grader has to do.
+>
+>Currently in our code there is a cronjob that randomly chooses the winning team after the game has ended (this runs every 2 hours)
+>
+>There is also a second cronjob that updates wallet based on the first cronjob's results (This runs every hour)
+
+While she continues working on her potion shop, the game she bet on ends. Shortly afer the 2 hour/ cronjob takes into affects and runs 
+`POST /bets/resolve` which updates her wallet based on the game outcome.
+
+After finishing her homework Sofia realizes the game ended hours ago and decides to check her balance 
+  - So she runs `GET /users/u_7b9d1e3f/balance`
+    ```bash
+      curl -X 'GET' \
+    'https://all-or-nothing-r35u.onrender.com/users/balance' \
+    -H 'accept: application/json' \
+    -H 'Authorization: Bearer [INSERT USER TOKEN HERE]'
+    ```
+  - And recieves something like:
+    ```json
+    {
+    "balance": 900
+    }
+
+    ```
+Unfortnately her total did'nt increase meaning she lost the bet :(
+     
 ## Example WorkFlow 3
 ## Example WorkFlow 4
 Priya is watching a live soccer match on TV and wants to join the conversation on All-Or-Nothing. She also tries to place a late bet and encounters an error.
