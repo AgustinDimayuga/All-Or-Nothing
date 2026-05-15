@@ -244,17 +244,17 @@ def delete_comment(
     comment_id: int,
 ):
     with db.engine.begin() as connection:
-        comment = connection.execute(
+        comment_user_id = connection.execute(
             sqlalchemy.text("""
             SELECT user_id
             FROM comments
-            WHERE id = :comment_id
+            WHERE id = :comment_id AND game_id = :game_id
             """),
-            {"comment_id": comment_id},
+            {"comment_id": comment_id, "game_id": game_id},
         ).scalar_one_or_none()
-        if not comment:
+        if not comment_user_id:
             raise HTTPException(status_code=404, detail="Comment does not exist")
-        if comment != current_token_data.user_id:
+        if comment_user_id != current_token_data.user_id:
             raise HTTPException(
                 status_code=403, detail="You can only delete your comments"
             )
@@ -266,5 +266,5 @@ def delete_comment(
             {"comment_id": comment_id},
         )
         if not result.rowcount:
-            raise HTTPException(status_code=500, detail="Error deleting comment...")
+            raise HTTPException(status_code=404, detail="Error deleting comment...")
     return Response(status_code=204)
