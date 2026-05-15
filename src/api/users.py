@@ -38,8 +38,7 @@ def get_balance(current_token_data: Annotated[TokenData, Depends(get_token_data)
 
             """),
             {"id": current_token_data.user_id},
-        )
-    money = money.scalar_one()
+        ).scalar_one()
     if money == None:
         raise HTTPException(status_code=404, detail="Could not find Wallet")
 

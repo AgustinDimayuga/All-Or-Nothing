@@ -204,16 +204,6 @@ def get_comments(
 ) -> list[Comment]:
     offset = (page - 1) * limit
     with db.engine.begin() as connection:
-        game = connection.execute(
-            sqlalchemy.text("""
-            SELECT id FROM games WHERE id = :game_id
-        """),
-            {"game_id": game_id},
-        ).fetchone()
-
-        if game is None:
-            raise HTTPException(status_code=404, detail="Game not found")
-
         comments = (
             connection.execute(
                 sqlalchemy.text("""
@@ -231,6 +221,19 @@ def get_comments(
             .mappings()
             .all()
         )
+
+        if not comments:
+            game = connection.execute(
+                sqlalchemy.text("""
+                SELECT id FROM games WHERE id = :game_id
+            """),
+                {"game_id": game_id},
+            ).fetchone()
+
+            if game is None:
+                raise HTTPException(status_code=404, detail="Game not found")
+            return []
+
     return map_comments(comments)
 
 
