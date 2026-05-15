@@ -66,12 +66,13 @@ def create_user(user: PostUser):
                 {"user_id": user_id, "change": 100},
             )
 
+        signed_token = create_access_token({"user_id": user_id, "name": user.name})
+
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Username already exists",
         )
-    signed_token = create_access_token({"user_id": user_id, "name": user.name})
     return Token(access_token=signed_token, token_type="bearer")
 
 
