@@ -111,7 +111,8 @@ def get_games(
     return map_games(games)
 
 
-@router.get("/game_details", response_model=Description)
+# @router.get("/game_details", response_model=Description)
+@router.get("/{game_id}/details", response_model=Description)
 def get_details(id: int):
 
     with db.engine.begin() as connection:

@@ -12,8 +12,6 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
-app.include_router(bets.router)
-
 
 @app.get("/")
 def root():
@@ -22,5 +20,6 @@ def root():
 
 app.include_router(auth.router)
 app.include_router(games.router)
+app.include_router(bets.router)
 app.include_router(leaderboard.router)
 app.include_router(users.router)

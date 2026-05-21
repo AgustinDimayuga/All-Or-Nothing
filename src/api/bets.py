@@ -1,8 +1,13 @@
 from enum import Enum
-from fastapi import APIRouter, Depends, HTTPException
+from wsgiref.headers import Headers
+
+from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel
 from typing import Annotated
 from datetime import datetime
+
+import json
+from src.api.idempotency import get_idempotency_key
 
 
 import sqlalchemy
@@ -36,6 +41,7 @@ class BetResponse(BaseModel):
 def place_bet(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
     new_bet: Bet,
+    idempotency_key: Annotated[str, Depends(get_idempotency_key)],
 ):
 
     user_id = current_token_data.user_id
@@ -46,6 +52,17 @@ def place_bet(
         )
 
     with db.engine.begin() as connection:
+        existing_bet = connection.execute(
+            sqlalchemy.text("""
+                SELECT response
+                FROM processed_bets
+                WHERE key = :key
+                """),
+            [{"key": idempotency_key}],
+        ).scalar_one_or_none()
+
+        if existing_bet:
+            return existing_bet
 
         cur_balance = connection.execute(
             sqlalchemy.text("""
@@ -126,7 +143,7 @@ def place_bet(
             ],
         )
 
-        return BetResponse(
+        bet_response = BetResponse(
             bet_id=values["id"],
             game_id=new_bet.game_id,
             team_bet_on=new_bet.team,
@@ -137,3 +154,18 @@ def place_bet(
             placed_at=str(values["created_at"]),
             new_balance=cur_balance - new_bet.amount,
         )
+
+        connection.execute(
+            sqlalchemy.text("""
+                INSERT INTO processed_bets (key, response)
+                VALUES (:key, :response)
+                """),
+            [
+                {
+                    "key": idempotency_key,
+                    "response": json.dumps(bet_response.model_dump()),
+                }
+            ],
+        )
+
+        return bet_response
