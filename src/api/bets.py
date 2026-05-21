@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
-from typing import List, Annotated
+from enum import Enum
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from typing import Annotated
+from datetime import datetime
+
 
 import sqlalchemy
-
 from src.api.user_helper import get_token_data, TokenData
-
 from src import database as db
 
 router = APIRouter(
@@ -29,21 +30,6 @@ class BetResponse(BaseModel):
     status: str
     placed_at: str
     new_balance: float
-
-
-# @router.post("/create", status_code=status.HTTP_201_CREATED)
-# def create_bet(user_id: int):
-#     with db.engine.begin() as connection:
-#         bet_id = connection.execute(
-#             sqlalchemy.text("""
-#                 INSERT INTO new_bets (user_id)
-#                 VALUES (:user_id)
-#                 RETURNING bet_id
-#                 """),
-#             [{"user_id": user_id}],
-#         ).scalar_one()
-#
-#     return bet_id
 
 
 @router.post("/", response_model=BetResponse)
@@ -76,10 +62,16 @@ def place_bet(
         get_odds = (
             connection.execute(
                 sqlalchemy.text("""
-                SELECT home_team_id, away_team_id, home_odds, away_odds, teams.id AS team_id
+                SELECT * 
+                FROM (SELECT home_team_id, away_team_id, home_odds, away_odds, teams.id AS team_id,      
+                        CASE
+                            WHEN NOW() < date THEN 'upcoming'
+                            WHEN NOW() < date + INTERVAL '2 hours' THEN 'live'
+                            ELSE 'finished'
+                        END AS status
                 FROM games
                 JOIN teams ON teams.id = games.home_team_id OR teams.id = games.away_team_id
-                WHERE games.id = :game_id AND teams.name = :team_name
+                WHERE games.id = :game_id AND teams.name = :team_name ) WHERE status = 'upcoming'
                 """),
                 [{"game_id": new_bet.game_id, "team_name": new_bet.team}],
             )
@@ -90,7 +82,7 @@ def place_bet(
         if not get_odds:
             raise HTTPException(
                 status_code=400,
-                detail="Team is not playing or team or game does not exist",
+                detail="Team is not playing or Game Already Started",
             )
 
         team_id = get_odds["team_id"]

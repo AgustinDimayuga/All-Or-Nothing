@@ -54,12 +54,8 @@ Later that evening, the Chiefs game concludes. The system automatically resolves
 
 - The backend triggers `POST /bets/resolve` internally with `game_id: g_5e6f7g8h` and `winning_team: "Chiefs"`. The server resolves 98 bets, pays out winners, and creates a notification for every affected user including Sofia.
 
-Sofia opens the app and checks her notifications:
 
-- She calls `GET /users/u_7b9d1e3f/notifications?read=false`. The response includes a notification: *"Your bet on the Chiefs won! You earned $175.00."*
-- She marks it as read by calling `PATCH /users/u_7b9d1e3f/notifications/n_3c5e7a9b` with `"read": true`.
-
-Sofia checks her updated balance:
+Sofia checks her updated balance after the game is over:
 
 - She calls `GET /users/u_7b9d1e3f/balance`. Her balance is now **$795.00**, reflecting the payout. She heads to the leaderboard to see if she climbed the rankings.
 

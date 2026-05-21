@@ -109,7 +109,6 @@ def upgrade() -> None:
     op.create_table(
         "teams",
         sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column("league_id", sa.Integer, nullable=False),
         sa.Column("name", sa.String, nullable=False),
     )
     op.create_table(
@@ -151,16 +150,6 @@ def upgrade() -> None:
         "games",
         "teams",
         ["away_team_id"],
-        ["id"],
-        ondelete="CASCADE",
-    )
-
-    # 4. Foreign Key from "leagues" to teams to fulfill league_id column
-    op.create_foreign_key(
-        "fk_league_id_teams",
-        "teams",
-        "leagues",
-        ["league_id"],
         ["id"],
         ondelete="CASCADE",
     )
@@ -228,7 +217,6 @@ def downgrade() -> None:
     op.drop_constraint("fk_games_league_id", "games")
     op.drop_constraint("fk_games_home_team_id", "games")
     op.drop_constraint("fk_home_team_id", "games")
-    op.drop_constraint("fk_league_id_teams", "teams")
     op.drop_constraint("fk_user_id-comments", "comments")
     op.drop_constraint("fk_parent_id", "comments")
     # op.drop_constraint("fk_wallet_id", "users")
