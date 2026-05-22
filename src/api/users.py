@@ -80,6 +80,14 @@ class TotalUserBets(BaseModel):
     returned: int
     bets: list[UserBet]
 
+@router.get("/withdraw")
+def withdraw_money(user_id: int , amount: float ):
+
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text("""
+                INSERT INTO wallet (change)
+                """))
+
 
 @router.get("/me/bets", response_model=TotalUserBets)
 def get_user_bets(

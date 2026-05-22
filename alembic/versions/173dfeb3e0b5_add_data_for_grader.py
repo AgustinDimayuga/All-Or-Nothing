@@ -17,7 +17,7 @@ from src.api.user_helper import get_password_hash, get_token_data
 
 # revision identifiers, used by Alembic.
 revision: str = "173dfeb3e0b5"
-down_revision: Union[str, Sequence[str], None] = "383d64614811"
+down_revision: Union[str, Sequence[str], None] = "4a4c3e3e5379"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

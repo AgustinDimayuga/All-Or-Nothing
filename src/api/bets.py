@@ -74,13 +74,14 @@ def place_bet(
         ).scalar_one()
 
         if new_bet.amount > cur_balance:
-            raise HTTPException(status_code=422, detail="Not enough money")
+            # Jonathan - Test Result fix
+            raise HTTPException(status_code=422, detail="Betting Amount Exceeds Current Balance")
 
         get_odds = (
             connection.execute(
                 sqlalchemy.text("""
-                SELECT * 
-                FROM (SELECT home_team_id, away_team_id, home_odds, away_odds, teams.id AS team_id,      
+                SELECT *
+                FROM (SELECT home_team_id, away_team_id, home_odds, away_odds, teams.id AS team_id,
                         CASE
                             WHEN NOW() < date THEN 'upcoming'
                             WHEN NOW() < date + INTERVAL '2 hours' THEN 'live'
