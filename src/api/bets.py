@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from typing import Annotated
 from datetime import datetime
 
+import random
+
 
 import sqlalchemy
 from src.api.user_helper import get_token_data, TokenData
@@ -137,3 +139,45 @@ def place_bet(
             placed_at=str(values["created_at"]),
             new_balance=cur_balance - new_bet.amount,
         )
+
+
+class EarlyCashOutBet(BaseModel):
+    bet_id: int
+    game_id: int
+    team_bet_on: str
+    payout: float
+    new_balance: float
+
+
+@router.post("/early", response_model=EarlyCashOutBet)
+def early_cash_out(
+    current_token_data: Annotated[TokenData, Depends(get_token_data)], bet_id: int
+):
+
+    with db.engine.begin() as connection:
+
+        user_id = current_token_data.user_id
+
+        # Just grabbing the bet
+
+        bet = connection.execute(
+            sqlalchemy.text("""
+                SELECT
+                    bets.id,
+                    bets.game_id,
+                    bets.team_id,
+                    teams.name,
+                    bets.amount,
+                    CASE
+                        WHEN bets.team_id = games.home_team_id THEN games.home_odds
+                        WHEN bets.team_id = games.away_team_id THEN games.away_odds
+                    END AS odds,
+                    bets.created_at
+                FROM bets
+                JOIN games ON bets.game_id = games.id
+                JOIN teams ON bets.team_id = teams.id
+                WHERE bets.user_id = :user_id
+                AND bets.id = :bet_id
+                """),
+            [{"user_id": user_id, "bet_id": bet_id}],
+        ).one()
