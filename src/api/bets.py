@@ -164,20 +164,40 @@ def early_cash_out(
             sqlalchemy.text("""
                 SELECT
                     bets.id,
-                    bets.game_id,
-                    bets.team_id,
-                    teams.name,
-                    bets.amount,
+                    bets.game_id AS game,
+                    bets.team_id AS team_id,
+                    teams.name AS name,
+                    bets.amount AS amount,
                     CASE
                         WHEN bets.team_id = games.home_team_id THEN games.home_odds
                         WHEN bets.team_id = games.away_team_id THEN games.away_odds
                     END AS odds,
-                    bets.created_at
+                    bets.created_at AS created_at,
+                    bets.resolved AS resolved,
+                    games.winning_team_id AS winning_team_id
                 FROM bets
                 JOIN games ON bets.game_id = games.id
                 JOIN teams ON bets.team_id = teams.id
                 WHERE bets.user_id = :user_id
                 AND bets.id = :bet_id
+                FOR UPDATE
                 """),
             [{"user_id": user_id, "bet_id": bet_id}],
-        ).one()
+        ).mappings().one_or_none()
+
+        #Checking if the bet exists and if not already resolved best to just or these later 
+
+        if bet is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Bet not found please select another bet"
+            )
+        if bet["resolved"]:
+            raise HTTPException(status_code=400, detail="Bet already resolved choose another bet")
+        
+        if bet["winning_team_id"] is not None:
+            raise HTTPException(status_code=400, detail= "Game already finished")
+        
+
+        
+        
