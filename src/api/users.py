@@ -80,13 +80,35 @@ class TotalUserBets(BaseModel):
     returned: int
     bets: list[UserBet]
 
+class SuccessfullWithdraw(BaseModel):
+    message: str
 @router.get("/withdraw")
 def withdraw_money(user_id: int , amount: float ):
 
+    if amount < 0 :
+        raise HTTPException(status_code= 400, detail= "Cannot Withdraw a Negative Amount or 0")
+
+    with db.engine.begin() as connection:
+        balance = connection.execute(
+            sqlalchemy.text(
+                """
+                SELECT COALESCE(SUM(change),0)
+                FROM wallet
+                WHERE user_id = :user
+                """
+            ),{"user":user_id}
+        ).scalar()
+
+    if amount > balance:
+        raise HTTPException(status_code=500 , detail="Amount to Withdraw Exceeds Current Balance")
+
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
-                INSERT INTO wallet (change)
-                """))
+                INSERT INTO wallet (user_id,change)
+                VALUES(:user_id,:amount)
+                """),{"user_id":user_id,"amount":amount * -1  })
+
+    return SuccessfullWithdraw( message=f"{amount} Successfully Withdrawn")
 
 
 @router.get("/me/bets", response_model=TotalUserBets)
