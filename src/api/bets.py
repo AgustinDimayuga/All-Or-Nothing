@@ -198,6 +198,22 @@ def early_cash_out(
         if bet["winning_team_id"] is not None:
             raise HTTPException(status_code=400, detail= "Game already finished")
         
+        
+        #Change this whenever we get a formula or implement rng
+        cash_out = bet["amount"] * 1
+
+        connection.execute(
+            sqlalchemy.text(
+                """
+                INSERT INTO wallet (user_id, from_bet, change)
+                VALUES (:user_id, :bet_id, :cash_out)
+                """
+            ),
+            {"user_id": user_id,
+             "bet_id": bet_id,
+             "cash_out": cash_out}
+        )
+        
 
         
         
