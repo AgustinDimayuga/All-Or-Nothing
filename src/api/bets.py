@@ -185,7 +185,7 @@ def early_cash_out(
             [{"user_id": user_id, "bet_id": bet_id}],
         ).mappings().one_or_none()
 
-        #Checking if the bet exists and if not already resolved best to just or these later 
+        #Checking if the bet exists and if not already resolved, best to just or these later 
 
         if bet is None:
             raise HTTPException(
@@ -213,6 +213,24 @@ def early_cash_out(
              "bet_id": bet_id,
              "cash_out": cash_out}
         )
+
+        connection.execute(
+            sqlalchemy.text(
+                """
+                UPDATE bets SET resolved = true
+                WHERE id = :bet_id
+                """
+            ),
+            {"bet_id": bet_id}
+        )
+    
+    return EarlyCashOutBet(
+        bet_id= bet_id,
+        game_id= bet["team_id"],
+        team_bet_on=bet["name"],
+        payout=bet["amount"],
+        new_balance=cash_out
+    )
         
 
         
