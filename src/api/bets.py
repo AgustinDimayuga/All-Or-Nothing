@@ -200,7 +200,7 @@ def early_cash_out(
         
         
         #Change this whenever we get a formula or implement rng
-        cash_out = bet["amount"] * 1
+        cash_out = bet["amount"] * 0.75
 
         connection.execute(
             sqlalchemy.text(
