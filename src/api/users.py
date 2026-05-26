@@ -29,15 +29,15 @@ class Balance(BaseModel):
 @router.get("/balance", response_model=Balance)
 def get_balance(current_token_data: Annotated[TokenData, Depends(get_token_data)]):
 
+    print(current_token_data.user_id)
     with db.engine.begin() as connection:
         money = connection.execute(
             sqlalchemy.text("""
-            SELECT COALESCE(SUM(change),0) AS balance
-            FROM wallet
-            WHERE wallet.user_id = :id
-
+            SELECT balance
+            FROM user_balances
+            WHERE user_id = :user_id
             """),
-            {"id": current_token_data.user_id},
+            {"user_id": current_token_data.user_id},
         ).scalar_one()
     if money == None:
         raise HTTPException(status_code=404, detail="Could not find Wallet")
