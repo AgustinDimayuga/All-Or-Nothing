@@ -257,7 +257,16 @@ Returns full details for a single game including current scores (if live), odds,
 
 ## 4. Bets
 
+
+
 ### `POST /bets`
+
+> [!NOTE]
+> **This endpoint is one of our "complex endpoints."**
+> The odds lookup and game validation happen first , if the game has started or the team is invalid
+> the request is rejected before anything is written. The balance deduction uses a conditional
+> `UPDATE ... WHERE balance >= amount` which atomically checks and deducts in one statement,
+> meaning two simultaneous bets can never overdraw the same account.
 
 Places a new bet on behalf of the authenticated user. Deducts the wager amount from the user's balance immediately. Bets cannot be placed once a game has started.
 
