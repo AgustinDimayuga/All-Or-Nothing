@@ -180,7 +180,7 @@ def early_cash_out(
                     END AS odds,
                     bets.created_at AS created_at,
                     bets.resolved AS resolved,
-                    games.winning_team_id AS winning_team_id
+                    games.result AS winning_team_id
                 FROM bets
                 JOIN games ON bets.game_id = games.id
                 JOIN teams ON bets.team_id = teams.id
@@ -202,11 +202,11 @@ def early_cash_out(
             )
         if bet["resolved"]:
             raise HTTPException(
-                status_code=400, detail="Bet already resolved choose another bet"
+                status_code=409, detail="Bet already resolved choose another bet"
             )
 
         if bet["winning_team_id"] is not None:
-            raise HTTPException(status_code=400, detail="Game already finished")
+            raise HTTPException(status_code=409, detail="Game already finished")
 
         # Change this whenever we get a formula or implement rng
         cash_out = bet["amount"] * 0.75
@@ -219,15 +219,18 @@ def early_cash_out(
             {"user_id": user_id, "bet_id": bet_id, "cash_out": cash_out},
         )
 
-        connection.execute(
-            sqlalchemy.text(
-                """
+        new_balance = (
+            connection.execute(
+                sqlalchemy.text("""
                 UPDATE user_balances
                 SET balance = balance + :payout
                 WHERE user_id = :user_id
-                """
-            ),
-            [{"user_id": user_id, "payout": cash_out}]
+                RETURNING balance
+                """),
+                [{"user_id": user_id, "payout": cash_out}],
+            )
+            .mappings()
+            .one()
         )
 
         connection.execute(
@@ -242,6 +245,6 @@ def early_cash_out(
         bet_id=bet_id,
         game_id=bet["team_id"],
         team_bet_on=bet["name"],
-        payout=bet["amount"],
-        new_balance=cash_out,
+        payout=cash_out,
+        new_balance=new_balance["balance"],
     )
