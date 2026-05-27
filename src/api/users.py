@@ -179,16 +179,20 @@ def get_user_bets(
 
 
 class SuccessfullWithdraw(BaseModel):
-    message: str
+    curr_balance: float
+
+
+class WithdrawRequest(BaseModel):
+    amount: float
 
 
 @router.post("/me/withdraw")
 def withdraw_money(
-    amount: float,
+    body: WithdrawRequest,
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
 ):
 
-    if amount < 0:
+    if body.amount < 0:
         raise HTTPException(status_code=400, detail="Invalid withdraw amount")
 
     with db.engine.begin() as connection:
@@ -198,17 +202,20 @@ def withdraw_money(
                 INSERT INTO wallet (user_id,change)
                 VALUES(:user_id,:amount)
                 """),
-            {"user_id": current_token_data.user_id, "amount": amount * -1},
+            {"user_id": current_token_data.user_id, "amount": body.amount * -1},
         )
 
-        balance = connection.execute(sqlalchemy.text("""
+        balance = connection.execute(
+            sqlalchemy.text("""
             UPDATE user_balances
             SET balance = balance - :amount
             WHERE user_id = :user_id AND balance >= :amount 
             RETURNING BALANCE
-            """)).scalar_one_or_none()
+            """),
+            {"user_id": current_token_data.user_id, "amount": body.amount},
+        ).scalar_one_or_none()
 
-        if not balance:
+        if balance is None:
             raise HTTPException(status_code=422, detail="Insufficient Funds")
 
-    return SuccessfullWithdraw(message=f"{amount} Successfully Withdrawn")
+    return SuccessfullWithdraw(curr_balance=balance)
