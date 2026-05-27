@@ -62,8 +62,14 @@ def get_user_creds(connection: sqlalchemy.Connection, username: str) -> UserCred
             {"username": username},
         )
         .mappings()
-        .one()
+        .one_or_none()
     )
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     return UserCredInDB(
         user_id=user["id"],

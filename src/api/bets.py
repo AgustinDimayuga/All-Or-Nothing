@@ -49,18 +49,6 @@ def place_bet(
 
     with db.engine.begin() as connection:
 
-        cur_balance = connection.execute(
-            sqlalchemy.text("""
-                SELECT sum(change)
-                FROM wallet
-                WHERE user_id = :user_id
-                """),
-            [{"user_id": user_id}],
-        ).scalar_one()
-
-        if new_bet.amount > cur_balance:
-            raise HTTPException(status_code=422, detail="Not enough money")
-
         get_odds = (
             connection.execute(
                 sqlalchemy.text("""
@@ -128,6 +116,23 @@ def place_bet(
             ],
         )
 
+        cur_balance = connection.execute(
+            # Ensure we have a lock for this row since we do not
+            # want other transactions reading this since we are updating it later
+            # this ensures concrrency read concrrency.md for any questions
+            sqlalchemy.text("""
+                UPDATE user_balances
+                SET balance = balance - :amount
+                WHERE user_id = :user_id AND balance >= :amount 
+                RETURNING BALANCE
+                
+                """),
+            [{"user_id": user_id, "amount": new_bet.amount}],
+        ).scalar_one_or_none()
+
+        if not cur_balance:
+            raise HTTPException(status_code=422, detail="Insufficient Funds")
+
         return BetResponse(
             bet_id=values["id"],
             game_id=new_bet.game_id,
@@ -137,7 +142,7 @@ def place_bet(
             potential_payout=odds * new_bet.amount,
             status="active",
             placed_at=str(values["created_at"]),
-            new_balance=cur_balance - new_bet.amount,
+            new_balance=cur_balance,
         )
 
 
@@ -160,8 +165,9 @@ def early_cash_out(
 
         # Just grabbing the bet
 
-        bet = connection.execute(
-            sqlalchemy.text("""
+        bet = (
+            connection.execute(
+                sqlalchemy.text("""
                 SELECT
                     bets.id,
                     bets.game_id AS game,
@@ -182,56 +188,49 @@ def early_cash_out(
                 AND bets.id = :bet_id
                 FOR UPDATE
                 """),
-            [{"user_id": user_id, "bet_id": bet_id}],
-        ).mappings().one_or_none()
+                [{"user_id": user_id, "bet_id": bet_id}],
+            )
+            .mappings()
+            .one_or_none()
+        )
 
-        #Checking if the bet exists and if not already resolved, best to just or these later 
+        # Checking if the bet exists and if not already resolved, best to just or these later
 
         if bet is None:
             raise HTTPException(
-                status_code=404,
-                detail="Bet not found please select another bet"
+                status_code=404, detail="Bet not found please select another bet"
             )
         if bet["resolved"]:
-            raise HTTPException(status_code=400, detail="Bet already resolved choose another bet")
-        
+            raise HTTPException(
+                status_code=400, detail="Bet already resolved choose another bet"
+            )
+
         if bet["winning_team_id"] is not None:
-            raise HTTPException(status_code=400, detail= "Game already finished")
-        
-        
-        #Change this whenever we get a formula or implement rng
+            raise HTTPException(status_code=400, detail="Game already finished")
+
+        # Change this whenever we get a formula or implement rng
         cash_out = bet["amount"] * 0.75
 
         connection.execute(
-            sqlalchemy.text(
-                """
+            sqlalchemy.text("""
                 INSERT INTO wallet (user_id, from_bet, change)
                 VALUES (:user_id, :bet_id, :cash_out)
-                """
-            ),
-            {"user_id": user_id,
-             "bet_id": bet_id,
-             "cash_out": cash_out}
+                """),
+            {"user_id": user_id, "bet_id": bet_id, "cash_out": cash_out},
         )
 
         connection.execute(
-            sqlalchemy.text(
-                """
+            sqlalchemy.text("""
                 UPDATE bets SET resolved = true
                 WHERE id = :bet_id
-                """
-            ),
-            {"bet_id": bet_id}
+                """),
+            {"bet_id": bet_id},
         )
-    
+
     return EarlyCashOutBet(
-        bet_id= bet_id,
-        game_id= bet["team_id"],
+        bet_id=bet_id,
+        game_id=bet["team_id"],
         team_bet_on=bet["name"],
         payout=bet["amount"],
-        new_balance=cash_out
+        new_balance=cash_out,
     )
-        
-
-        
-        
