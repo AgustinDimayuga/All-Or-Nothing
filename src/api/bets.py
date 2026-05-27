@@ -220,6 +220,17 @@ def early_cash_out(
         )
 
         connection.execute(
+            sqlalchemy.text(
+                """
+                UPDATE user_balances
+                SET balance = balance + :payout
+                WHERE user_id = :user_id
+                """
+            ),
+            [{"user_id": user_id, "payout": cash_out}]
+        )
+
+        connection.execute(
             sqlalchemy.text("""
                 UPDATE bets SET resolved = true
                 WHERE id = :bet_id
