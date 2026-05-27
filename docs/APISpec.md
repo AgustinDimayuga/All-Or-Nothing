@@ -262,7 +262,7 @@ Returns full details for a single game including current scores (if live), odds,
 ### `POST /bets`
 
 > [!NOTE]
-> **This endpoint is one of our "complex endpoints."**
+> **This endpoint our first "complex endpoints."**
 > The odds lookup and game validation happen first , if the game has started or the team is invalid
 > the request is rejected before anything is written. The balance deduction uses a conditional
 > `UPDATE ... WHERE balance >= amount` which atomically checks and deducts in one statement,
@@ -305,6 +305,44 @@ Places a new bet on behalf of the authenticated user. Deducts the wager amount f
 - `422 Unprocessable Entity` — insufficient balance
 
 ---
+
+### `POST /bets/early`
+> [!NOTE]
+> **This endpoint is our second "complex endpoints."**
+> The game validation happen first , if the game is currently being resolved or has not started
+> the request is rejected before anything is written. The balance deduction uses a conditional
+> `UPDATE ... WHERE balance >= amount` which atomically checks and deducts in one statement. Meaning if any other request
+> is going to update the balance it will not allow that request to do so until our transaction has committed.
+
+
+
+Allows a user to cash out an active bet before the game concludes, receiving 75% of the original wager. Bets that are already resolved or belong to a finished game cannot be cashed out.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Query Params:** `bet_id: int`
+
+**Response:**
+```json
+
+### `POST /bets/early`
+Allows a user to cash out an active bet before the game concludes, receiving 75% of the original wager. Bets that are already resolved or belong to a finished game cannot be cashed out.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Query Params:** `bet_id: int`
+
+**Response:**
+```json
+{
+  "bet_id": 1,
+  "game_id": "g_1a2b3c4d",
+  "team_bet_on": "Lakers",
+  "payout": 37.50,
+  "new_balance": 137.50
+}
+```
+
 
 ### `GET /bets/{bet_id}`
 
