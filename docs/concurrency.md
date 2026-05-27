@@ -8,7 +8,7 @@ Two concurrent bet requests from the same user both read the balance before eith
 
 ![](Blank%20diagram.png)
 
-## Case 2 - Dirty Read and Lost Update: Cashing out a bet early while another bet is being resolved on `POST /bets/early
+## Case 2 - Dirty Read and Lost Update: Cashing out a bet early while another bet is being resolved on `POST /bets/early`
 
 ### Phenomenon: Dirty Read
 
