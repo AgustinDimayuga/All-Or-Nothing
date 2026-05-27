@@ -8,7 +8,7 @@ Two concurrent bet requests from the same user both read the balance before eith
 
 ![](Blank%20diagram.png)
 
-## Case 2 - Dirty Read and Lost Update: Cashing out a bet early while another bet is being resolved
+## Case 2 - Dirty Read and Lost Update: Cashing out a bet early while another bet is being resolved on `POST /bets/early
 
 ### Phenomenon: Dirty Read
 
@@ -16,9 +16,14 @@ When cashing out a bet early, the program will calculate a payout and updates th
 
 To fix this issue, the transaction should be set to at least Read Committed so that dirty reads don’t happen.
 
+![](early_dirty_read.png)
+
 
 ### Phenomenon: Lost Update
 
 Another issue is when the early cashed out bet reads the current balance and uses that balance to update it in two separate queries.  If another bet were to update the balance before the early cashed out bet updates the balance, the early cashed out bet would end up overwriting the newly updated balance resulting in a lost update.
 
 To fix this issue, the balance should be read while updating such as for example, UPDATE balance SET balance = balance + 20, so that the balance is the most up to date and so there is a lock on that data while it is being updated by a transaction. 
+
+![](early_lost_update.png)
+
