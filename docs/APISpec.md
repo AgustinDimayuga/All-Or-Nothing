@@ -322,15 +322,6 @@ Allows a user to cash out an active bet before the game concludes, receiving 75%
 
 **Query Params:** `bet_id: int`
 
-**Response:**
-```json
-
-### `POST /bets/early`
-Allows a user to cash out an active bet before the game concludes, receiving 75% of the original wager. Bets that are already resolved or belong to a finished game cannot be cashed out.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Query Params:** `bet_id: int`
 
 **Response:**
 ```json
