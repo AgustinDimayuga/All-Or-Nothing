@@ -27,3 +27,10 @@ To fix this issue, the balance should be read while updating such as for example
 
 ![](early_lost_update.png)
 
+## Case 3 - Lost Update: Withdrawing money while a new bet is processing
+
+A third situation that can happen is where a user accumulates a lot of money and decides to cash some part of it and wager another part. With no concurrency control this would cause a Lost Update where...
+
+Both the "withdraw" endpoint and the bet function use the same bet amount even though the "bets" endpoint should be using the balance AFTER it was updated by the "withdraw" endpoint. This would cause either a negative balance or incorrect balance tracking. 
+
+![](Money_Withdraw.png)
