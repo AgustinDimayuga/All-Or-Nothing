@@ -66,6 +66,14 @@ def create_user(user: PostUser):
                 {"user_id": user_id, "change": 100},
             )
 
+            connection.execute(
+                sqlalchemy.text("""
+                    INSERT INTO user_balances (user_id, balance)
+                    VALUES (:user_id, :balance)
+                    """),
+                {"user_id": user_id, "balance": 100},
+            )
+
         signed_token = create_access_token({"user_id": user_id, "name": user.name})
 
     except IntegrityError:

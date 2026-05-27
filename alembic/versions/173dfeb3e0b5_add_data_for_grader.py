@@ -17,7 +17,7 @@ from src.api.user_helper import get_password_hash, get_token_data
 
 # revision identifiers, used by Alembic.
 revision: str = "173dfeb3e0b5"
-down_revision: Union[str, Sequence[str], None] = "383d64614811"
+down_revision: Union[str, Sequence[str], None] = "46391ff7c5e8"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -79,6 +79,13 @@ def upgrade() -> None:
         """),
         {"user_id": priya_user_id, "change": 100},
     )
+    connection.execute(
+        sa.text("""
+        INSERT INTO user_balances (user_id, balance)
+        VALUES (:user_id, :balance)
+        """),
+        {"user_id": priya_user_id, "balance": 100},
+    )
     ############# SOFia
     sofia_user_id = connection.execute(
         sa.text("""
@@ -110,6 +117,14 @@ def upgrade() -> None:
         {"user_id": sofia_user_id, "change": 100},
     )
 
+    connection.execute(
+        sa.text("""
+        INSERT INTO user_balances (user_id, balance)
+        VALUES (:user_id, :balance)
+        """),
+        {"user_id": sofia_user_id, "balance": 100},
+    )
+
     derek_user_id = connection.execute(
         sa.text("""
         INSERT INTO users (username, name, email, phone)
@@ -138,6 +153,14 @@ def upgrade() -> None:
             VALUES(:user_id,:change)
         """),
         {"user_id": derek_user_id, "change": 1000},
+    )
+
+    connection.execute(
+        sa.text("""
+        INSERT INTO user_balances (user_id, balance)
+        VALUES (:user_id, :balance)
+        """),
+        {"user_id": derek_user_id, "balance": 100},
     )
 
     comment = connection.execute(

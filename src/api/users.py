@@ -29,15 +29,15 @@ class Balance(BaseModel):
 @router.get("/balance", response_model=Balance)
 def get_balance(current_token_data: Annotated[TokenData, Depends(get_token_data)]):
 
+    print(current_token_data.user_id)
     with db.engine.begin() as connection:
         money = connection.execute(
             sqlalchemy.text("""
-            SELECT COALESCE(SUM(change),0) AS balance
-            FROM wallet
-            WHERE wallet.user_id = :id
-
+            SELECT balance
+            FROM user_balances
+            WHERE user_id = :user_id
             """),
-            {"id": current_token_data.user_id},
+            {"user_id": current_token_data.user_id},
         ).scalar_one()
     if money == None:
         raise HTTPException(status_code=404, detail="Could not find Wallet")
@@ -176,3 +176,46 @@ def get_user_bets(
         returned=len(bets_list),
         bets=bets_list,
     )
+
+
+class SuccessfullWithdraw(BaseModel):
+    curr_balance: float
+
+
+class WithdrawRequest(BaseModel):
+    amount: float
+
+
+@router.post("/me/withdraw")
+def withdraw_money(
+    body: WithdrawRequest,
+    current_token_data: Annotated[TokenData, Depends(get_token_data)],
+):
+
+    if body.amount < 0:
+        raise HTTPException(status_code=400, detail="Invalid withdraw amount")
+
+    with db.engine.begin() as connection:
+
+        connection.execute(
+            sqlalchemy.text("""
+                INSERT INTO wallet (user_id,change)
+                VALUES(:user_id,:amount)
+                """),
+            {"user_id": current_token_data.user_id, "amount": body.amount * -1},
+        )
+
+        balance = connection.execute(
+            sqlalchemy.text("""
+            UPDATE user_balances
+            SET balance = balance - :amount
+            WHERE user_id = :user_id AND balance >= :amount 
+            RETURNING BALANCE
+            """),
+            {"user_id": current_token_data.user_id, "amount": body.amount},
+        ).scalar_one_or_none()
+
+        if balance is None:
+            raise HTTPException(status_code=422, detail="Insufficient Funds")
+
+    return SuccessfullWithdraw(curr_balance=balance)
