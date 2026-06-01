@@ -112,12 +112,36 @@ def upgrade() -> None:
                 ),teams
             )
 
-        print("-------------------------------------------Making 100,000 Games--------------------------------------------------------------")
+        print("-------------------------------------------Making 100,000 Games and leagues--------------------------------------------------------------")
+
+        
+        conn.execute(
+        sqlalchemy.text(
+            """
+            INSERT INTO leagues (name, sport)
+            VALUES
+            ('world_cup', 'soccer'),
+            ('nlb', 'baseball'),
+            ('nba', 'basketball'),
+            ('nfl', 'football'),
+            ('nhl', 'hockey')
+            """
+        )
+    )
         teams= conn.execute(
             sqlalchemy.text(
                 """
                 SELECT id
                 FROM teams
+                """
+            )
+        ).scalars().all()
+
+        league_ids = conn.execute(
+            sqlalchemy.text(
+                """
+                SELECT id 
+                FROM leagues
                 """
             )
         ).scalars().all()
@@ -131,7 +155,7 @@ def upgrade() -> None:
             away = random.choice(teams)
             games.append(
                 {
-                    "league_id":random.randint(1,2),
+                    "league_id":random.choice(league_ids),
                     "home_team_id": home,
                     "away_team_id": away,
                     "date" : fake.date_time_between(start_date='-5y', end_date='now', tzinfo=None),
@@ -156,7 +180,7 @@ def upgrade() -> None:
             sqlalchemy.text(
                 """
                 SELECT id
-                FROM users
+                FROM games
                 """
             )
         ).scalars().all()
@@ -168,7 +192,20 @@ def upgrade() -> None:
 
             for _ in range(num_bets):
                 game_id = random.choice(game_ids)
-                team_id = random.choice(teams)
+                
+                #From the game that was selected choose a random team to bet on
+                game = conn.execute(
+                    sqlalchemy.text(
+                        """
+                        SELECT home_team_id, away_team_id
+                        FROM games
+                        WHERE id = :game_id
+                        """
+                    ),
+                    {"game_id": game_id}
+                ).mappings().one()
+
+                team_id = random.choice([game["home_team_id"], game["away_team_id"]])
 
                 bets.append({
                     "user_id": user_id,

@@ -19,4 +19,13 @@ router = APIRouter(
 @router.post("/hello")
 def reset_db():
     with db.engine.begin() as connection:
-        connection.execute()
+        connection.execute(
+            sqlalchemy.text(
+                """
+                TRUNCATE TABLE
+                bets, comments, games, leagues, teams, user_balances, user_cred, users, wallet
+                RESTART IDENTITY CASCADE;
+                """
+            )
+        )
+    return {"message": "Database reset"}

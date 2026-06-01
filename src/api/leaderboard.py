@@ -4,6 +4,7 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from enum import Enum
 from src import database as db
+import time
 
 router = APIRouter(
     prefix="/leaderboard",
@@ -34,6 +35,7 @@ def get_leaderboard(
     period: Period = Period.weekly,
     limit: int = Query(default=25, ge=1, le=100),
 ) -> Leaderboard:
+    # start = time.perf_counter() 
 
     interval = "7 days" if period == Period.weekly else "1 day"
 
@@ -69,7 +71,8 @@ def get_leaderboard(
         )
         for i, user in enumerate(users)
     ]
-
+    # elapsed_ms = (time.perf_counter() - start) * 1000
+    # print(f"{elapsed_ms:.2f}" + " ms")
     return Leaderboard(
         period=period,
         limit=limit,

@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import sqlalchemy
 from src.api.user_helper import *
 from src import database as db
+import time
 
 router = APIRouter(
     prefix="/users", tags=["user"], dependencies=[Depends(get_token_data)]
@@ -28,7 +29,7 @@ class Balance(BaseModel):
 
 @router.get("/balance", response_model=Balance)
 def get_balance(current_token_data: Annotated[TokenData, Depends(get_token_data)]):
-
+    # start = time.perf_counter()
     print(current_token_data.user_id)
     with db.engine.begin() as connection:
         money = connection.execute(
@@ -42,6 +43,8 @@ def get_balance(current_token_data: Annotated[TokenData, Depends(get_token_data)
     if money == None:
         raise HTTPException(status_code=404, detail="Could not find Wallet")
 
+    # elapsed_ms = (time.perf_counter() - start) * 1000
+    # print(f"{elapsed_ms:.2f}" + " ms")
     return Balance(balance=money)
 
 
@@ -49,6 +52,9 @@ def get_balance(current_token_data: Annotated[TokenData, Depends(get_token_data)
 async def read_users_me(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
 ) -> TokenData:
+    # start = time.perf_counter()
+    # elapsed_ms = (time.perf_counter() - start) * 1000
+    # print(f"{elapsed_ms:.2f}" + " ms")
     return current_token_data
 
 
@@ -88,6 +94,7 @@ def get_user_bets(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
 ) -> TotalUserBets:
+    # start = time.perf_counter()
     offset = (page - 1) * limit
 
     if status == BetStatus.won:
@@ -167,6 +174,8 @@ def get_user_bets(
         for bet in bets
     ]
 
+    # elapsed_ms = (time.perf_counter() - start) * 1000
+    # print(f"{elapsed_ms:.2f}" + " ms")
     return TotalUserBets(
         user_id=current_token_data.user_id,
         status=status,
@@ -191,6 +200,8 @@ def withdraw_money(
     body: WithdrawRequest,
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
 ):
+    
+    start = time.perf_counter()
 
     if body.amount < 0:
         raise HTTPException(status_code=400, detail="Invalid withdraw amount")
@@ -217,5 +228,7 @@ def withdraw_money(
 
         if balance is None:
             raise HTTPException(status_code=422, detail="Insufficient Funds")
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        print(f"{elapsed_ms:.2f}" + " ms")
 
     return SuccessfullWithdraw(curr_balance=balance)

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import sqlalchemy
 from src.api.user_helper import *
 from src import database as db
+import time
 
 router = APIRouter(
     prefix="/auth",
@@ -31,6 +32,8 @@ class PostUser(BaseModel):
 
 @router.post("/users", response_model=Token)
 def create_user(user: PostUser):
+
+    # start = time.perf_counter()
 
     try:
         with db.engine.begin() as connection:
@@ -75,6 +78,8 @@ def create_user(user: PostUser):
             )
 
         signed_token = create_access_token({"user_id": user_id, "name": user.name})
+        # elapsed_ms = (time.perf_counter() - start) * 1000
+        # print(f"{elapsed_ms:.2f}" + " ms")
 
     except IntegrityError:
         raise HTTPException(
@@ -88,6 +93,7 @@ def create_user(user: PostUser):
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
+    # start = time.perf_counter()
     with db.engine.begin() as connection:
         user = authenticate_user(connection, form_data.username, form_data.password)
     if not user:
@@ -98,4 +104,6 @@ async def login_for_access_token(
         )
 
     signed_token = create_access_token({"user_id": user.user_id, "name": user.name})
+    # elapsed_ms = (time.perf_counter() - start) * 1000
+    # print(f"{elapsed_ms:.2f}" + " ms")
     return Token(access_token=signed_token, token_type="bearer")

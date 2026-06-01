@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.engine import RowMapping
 from src import database as db
 from src.api.user_helper import get_token_data, TokenData
+import time
 
 from typing import Annotated
 
@@ -69,6 +70,7 @@ def get_games(
     page: int = 1,
     limit: int = 20,
 ) -> list[Games]:
+    # start = time.perf_counter()
     offset = (page - 1) * limit
 
     with db.engine.begin() as connection:
@@ -108,12 +110,14 @@ def get_games(
 
     if not games:
         raise HTTPException(status_code=404, detail="Games Not Found / Bad Input")
+    # elapsed_ms = (time.perf_counter() - start) * 1000
+    # print(f"{elapsed_ms:.2f}" + " ms")
     return map_games(games)
 
 
 @router.get("/game_details", response_model=Description)
 def get_details(id: int):
-
+    # start = time.perf_counter()
     with db.engine.begin() as connection:
         info = connection.execute(
             sqlalchemy.text("""
@@ -131,6 +135,8 @@ def get_details(id: int):
         raise HTTPException(status_code=404, detail="Game not found")
 
     print(info)
+    # elapsed_ms = (time.perf_counter() - start) * 1000
+    # print(f"{elapsed_ms:.2f}" + " ms")
     return Description(
         game_id=info.id,
         league_id=info.league_id,

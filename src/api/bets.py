@@ -5,6 +5,7 @@ from typing import Annotated
 from datetime import datetime
 
 import random
+import time
 
 
 import sqlalchemy
@@ -39,6 +40,7 @@ def place_bet(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
     new_bet: Bet,
 ):
+    # start = time.perf_counter()
 
     user_id = current_token_data.user_id
 
@@ -132,6 +134,10 @@ def place_bet(
 
         if not cur_balance:
             raise HTTPException(status_code=422, detail="Insufficient Funds")
+        
+        # elapsed_ms = (time.perf_counter() - start) * 1000
+
+        # print(f"{elapsed_ms:.2f}" + " ms")
 
         return BetResponse(
             bet_id=values["id"],
@@ -158,7 +164,7 @@ class EarlyCashOutBet(BaseModel):
 def early_cash_out(
     current_token_data: Annotated[TokenData, Depends(get_token_data)], bet_id: int
 ):
-
+    # start = time.perf_counter()
     with db.engine.begin() as connection:
 
         user_id = current_token_data.user_id
@@ -240,7 +246,9 @@ def early_cash_out(
                 """),
             {"bet_id": bet_id},
         )
-
+    # elapsed_ms = (time.perf_counter() - start) * 1000
+    # print(f"{elapsed_ms:.2f}" + " ms")
+    
     return EarlyCashOutBet(
         bet_id=bet_id,
         game_id=bet["team_id"],
