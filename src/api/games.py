@@ -73,10 +73,21 @@ def get_games(
     # start = time.perf_counter()
     offset = (page - 1) * limit
 
+    if status == 'upcoming':
+        interval = 'NOW() < games.date'
+
+    elif status == 'live':
+        interval = "NOW() < games.date + INTERVAL '2 hours' AND games.date <= NOW()"
+    
+    else:
+        interval = "games.date + INTERVAL '2 hours' <= NOW()"
+    
+    
+
     with db.engine.begin() as connection:
         games = (
             connection.execute(
-                sqlalchemy.text("""
+                sqlalchemy.text(f"""
                 SELECT * FROM (
                     SELECT
                         games.id,
@@ -85,18 +96,13 @@ def get_games(
                         away_team.name AS away_team,
                         games.date,
                         games.location,
-                        CASE
-                            WHEN NOW() < date THEN 'upcoming'
-                            WHEN NOW() < date + INTERVAL '2 hours' THEN 'live'
-                            ELSE 'finished'
-                        END AS status
+                        :status AS status
                     FROM games
                     JOIN leagues ON games.league_id = leagues.id
                     JOIN teams AS home_team ON games.home_team_id = home_team.id
                     JOIN teams AS away_team ON games.away_team_id = away_team.id
-                    WHERE leagues.name = :league
+                    WHERE leagues.name = :league AND {interval}
                 ) AS subquery
-                WHERE status = :status
                 ORDER BY date ASC
                 OFFSET :offset
                 LIMIT :limit

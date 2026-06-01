@@ -4,7 +4,6 @@ Link to the python file
 
 https://github.com/AgustinDimayuga/All-Or-Nothing/blob/V5_Million_rows/alembic/versions/4157d2058e87_1_million_rows.py
 
-Final row counts:
 
 Final row counts:
 
@@ -145,8 +144,9 @@ curl -X 'POST' \
 
 The slowest endpoint we have is `GET /games/` at 268.20 ms
 
-Running explain analyze gives us this
+### Running explain analyze gives us this
 
+```text
 Limit  (cost=4065.74..4065.74 rows=1 width=144) (actual time=61.222..62.995 rows=20.00 loops=1)
   Buffers: shared hit=121347
   ->  Sort  (cost=4065.73..4065.74 rows=2 width=144) (actual time=61.197..62.986 rows=220.00 loops=1)
@@ -187,10 +187,63 @@ Limit  (cost=4065.74..4065.74 rows=1 width=144) (actual time=61.222..62.995 rows
                           Index Cond: (id = games.away_team_id)
                           Index Searches: 19958
                           Buffers: shared hit=59874
+
+```                          
 Planning:
 Buffers: shared hit=12
 Planning Time: 0.307 ms
 Execution Time: 63.027 ms
+
+
+Indexes added to speed up the query 
+
+CREATE INDEX idx_games_date
+ON games (date);
+
+CREATE INDEX idx_games_league_id
+ON games (league_id);
+
+### After adding the indexes
+
+```text
+Limit  (cost=239.28..263.12 rows=20 width=112) (actual time=15.127..15.810 rows=20.00 loops=1)
+  Buffers: shared hit=2510 read=4
+  ->  Nested Loop  (cost=0.88..23828.93 rows=19990 width=112) (actual time=0.842..15.769 rows=220.00 loops=1)
+        Buffers: shared hit=2510 read=4
+        ->  Nested Loop  (cost=0.59..17245.20 rows=19990 width=106) (actual time=0.454..8.871 rows=220.00 loops=1)
+              Buffers: shared hit=1850 read=4
+              ->  Nested Loop  (cost=0.30..10661.47 rows=19990 width=100) (actual time=0.391..2.043 rows=220.00 loops=1)
+                    Join Filter: (games.league_id = leagues.id)
+                    Rows Removed by Join Filter: 969
+                    Buffers: shared hit=1190 read=4
+                    ->  Index Scan using idx_games_date on games  (cost=0.30..9161.17 rows=99949 width=72) (actual time=0.291..1.475 rows=1189.00 loops=1)
+                          Index Cond: (date <= (now() - '02:00:00'::interval))
+                          Index Searches: 1
+                          Buffers: shared hit=1189 read=4
+                    ->  Materialize  (cost=0.00..1.07 rows=1 width=36) (actual time=0.000..0.000 rows=1.00 loops=1189)
+                          Storage: Memory  Maximum Storage: 17kB
+                          Buffers: shared hit=1
+                          ->  Seq Scan on leagues  (cost=0.00..1.06 rows=1 width=36) (actual time=0.069..0.070 rows=1.00 loops=1)
+                                Filter: ((name)::text = 'nlb'::text)
+                                Rows Removed by Filter: 4
+                                Buffers: shared hit=1
+              ->  Index Scan using teams_pkey on teams home_team  (cost=0.29..0.33 rows=1 width=14) (actual time=0.030..0.030 rows=1.00 loops=220)
+                    Index Cond: (id = games.home_team_id)
+                    Index Searches: 220
+                    Buffers: shared hit=660
+        ->  Index Scan using teams_pkey on teams away_team  (cost=0.29..0.33 rows=1 width=14) (actual time=0.031..0.031 rows=1.00 loops=220)
+              Index Cond: (id = games.away_team_id)
+              Index Searches: 220
+              Buffers: shared hit=660
+```
+
+
+Planning:
+Buffers: shared hit=48 read=4
+Planning Time: 5.629 ms
+Execution Time: 16.167 ms
+
+
 
 
 
