@@ -194,6 +194,8 @@ Buffers: shared hit=12
 Planning Time: 0.307 ms
 Execution Time: 63.027 ms
 
+From the explain analyze, the total time to execute the query was around 63 ms and most of the time went to scanning the whole games table on the parallel seq scan
+on games where two workers had to be used to scan the whole table. This was because of our query having a Case When statement that our time was slowed down. 
 
 Indexes added to speed up the query 
 
@@ -243,6 +245,8 @@ Buffers: shared hit=48 read=4
 Planning Time: 5.629 ms
 Execution Time: 16.167 ms
 
+
+Creating the two indexes had the performance improvement expected. 
 
 
 
