@@ -23,6 +23,29 @@ We all agreed our largest table in the database had to be bets since many player
 
 The users
 
+# Fake Data Modeling Write-Up
+  Users (100,000) - 
+    Considering that there are many betting apps out there, we decided to generate approximately 100,000 users to simulate a successful app with constant activity.
+    Each user was also assigned a corresponding wallet
+    
+  Teams (50,000) -
+    For teams (and games), we wanted to test with large numbers to simulate as much activity as possible. Not only from users but from real life game activity.
+    So we decided to make a large number of teams in order to create a large number of games.
+    
+  Games (100,000) - 
+    To simulate games we like to test our DB using a High-Load scenario where there are many different sports/teams playing actively throughout the year
+    so we made 100,000 games with random times in a span of 5 years with other random factors that include betting odds and results. 
+    (in order to create the least amount of bias as possible in our data sets)
+
+  Bets (Undefined amount) - 
+    Like mentioned before we all collectively decided that bets would have to be the largest set of data because our project was tailored for user activity.
+    For this step in the insertion of data we tried to get rid of as much bias as possible so....
+    In a span of two years each user can have between 10 and 20 (completely random) on random games, while betting a random amount of money that can be between 
+    $5 - $500 dollars 
+    
+>[!NOTE]
+>After testing the insertion of Data, the amount of bets placed fluctuated between 800,000 and 1.2 million  
+    
 
 # Performance results of hitting endpoints
 
