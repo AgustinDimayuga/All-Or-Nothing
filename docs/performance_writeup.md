@@ -142,6 +142,8 @@ curl -X 'POST' \
 }'
 ```
 
+## Performance Tuning
+
 The slowest endpoint we have is `GET /games/` at 268.20 ms
 
 ### Running explain analyze gives us this
