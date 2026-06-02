@@ -51,6 +51,13 @@ def map_games(games: Sequence[RowMapping]):
     ]
 
 
+class SearchResponse(BaseModel):
+    page: int
+    limit: int
+    total: int
+    games: list[Games]
+
+
 class League(str, Enum):
     NLB = "nlb"
     WORLD_CUP = "world_cup"
@@ -62,28 +69,36 @@ class Status(str, Enum):
     finished = "finished"
 
 
-@router.get("/", response_model=list[Games])
+@router.get("/", response_model=SearchResponse)
 def get_games(
-    league: League,
-    status: Status,
+    league: League = League.NLB,
+    status: Status = Status.upcoming,
     page: int = 1,
     limit: int = 20,
-) -> list[Games]:
+) -> SearchResponse:
+
+    if page < 1:
+        raise HTTPException(status_code=400, detail="Page number cannot be less than 1")
+
+    if limit <= 0:
+        raise HTTPException(status_code=400, detail="Limit cannot be 0 or negative")
+    elif limit > 100:
+        raise HTTPException(status_code=400, detail="Limit cannot be over 100")
+
     offset = (page - 1) * limit
 
-    if status == 'upcoming':
-        interval = 'NOW() < games.date'
+    if status == "upcoming":
+        interval = "NOW() < games.date"
 
-    elif status == 'live':
+    elif status == "live":
         interval = "NOW() < games.date + INTERVAL '2 hours' AND games.date <= NOW()"
-    
+
     else:
         interval = "games.date + INTERVAL '2 hours' <= NOW()"
 
     with db.engine.begin() as connection:
-        games = (
-            connection.execute(
-                sqlalchemy.text(f"""
+        games = connection.execute(
+            sqlalchemy.text(f"""
                 SELECT * FROM (
                     SELECT
                         games.id,
@@ -105,15 +120,17 @@ def get_games(
                 LIMIT :limit
 
             """),
-                {"league": league, "status": status, "offset": offset, "limit": limit},
-            )
-            .mappings()
-            .all()
+            {"league": league, "status": status, "offset": offset, "limit": limit},
         )
+
+    total = games.rowcount
+
+    games = games.mappings().all()
 
     if not games:
         raise HTTPException(status_code=404, detail="Games Not Found / Bad Input")
-    return map_games(games)
+
+    return SearchResponse(page=page, limit=limit, total=total, games=map_games(games))
 
 
 @router.get("/game_details", response_model=Description)

@@ -30,7 +30,9 @@ Creates a new user account with a starting balance of virtual currency.
 ```json
 {
   "username": "sportzfan99",
+  "name": "sportzfan",
   "email": "sportzfan99@example.com",
+  "phone": "1234567890",
   "password": "SecurePass123!"
 }
 ```
@@ -38,11 +40,8 @@ Creates a new user account with a starting balance of virtual currency.
 **Response `201 Created`:**
 ```json
 {
-  "user_id": "u_4f8a2c1b",
-  "username": "sportzfan99",
-  "email": "sportzfan99@example.com",
-  "balance": 1000.00,
-  "created_at": "2025-04-15T10:30:00Z" */ in year-month-day:timestamp format */ ⏲️
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3LCJuYW1lIjoic3BvcnR6ZmFuIiwiZXhwIjoxNzgwMzg5ODYzfQ.ZPz53g8eD-nHztoblVHdGZGzi9XNnmgMhZbWEEtkSS4",
+  "token_type": "bearer"
 }
 ```
 
@@ -223,6 +222,7 @@ Returns a list of live and upcoming games available for betting. Optionally filt
 ```
 
 **Errors:**
+- `400 Bad Request` - Invalid inputs for page or limit 
 - `503 Service Unavailable` — live game data source is unreachable
 
 ---
@@ -301,7 +301,6 @@ Places a new bet on behalf of the authenticated user. Deducts the wager amount f
 - `400 Bad Request` — amount is zero or negative
 - `403 Forbidden` — betting has closed (game already started)
 - `404 Not Found` — game does not exist
-- `409 Conflict` — duplicate bet submission detected
 - `422 Unprocessable Entity` — insufficient balance
 
 ---

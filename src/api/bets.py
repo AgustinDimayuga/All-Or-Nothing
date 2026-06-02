@@ -146,6 +146,79 @@ def place_bet(
         )
 
 
+@router.get("/{bet_id}", response_model=BetResponse)
+def get_bet(
+    current_token_data: Annotated[TokenData, Depends(get_token_data)], bet_id: int
+):
+
+    with db.engine.begin() as connection:
+
+        user_id = current_token_data.user_id
+
+        bet = (
+            connection.execute(
+                sqlalchemy.text("""
+                SELECT *,
+                CASE
+                    WHEN bets.team_id = games.home_team_id THEN games.home_odds
+                    WHEN bets.team_id = games.away_team_id THEN games.away_odds
+                END AS odds
+                FROM bets
+                JOIN games ON bets.game_id = games.id
+                JOIN teams ON bets.team_id = teams.id
+                WHERE bets.id = :bet_id
+                """),
+                [{"bet_id": bet_id}],
+            )
+            .mappings()
+            .one_or_none()
+        )
+
+        if bet is None:
+            raise HTTPException(
+                status_code=404, detail="Bet not found, please select another bet"
+            )
+
+        if bet["user_id"] != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="This bet belongs to another user, please select another bet",
+            )
+
+        cur_balance = (
+            connection.execute(
+                sqlalchemy.text("""
+                SELECT balance
+                FROM user_balances
+                WHERE user_id = :user_id
+                """),
+                [{"user_id": user_id}],
+            )
+            .mappings()
+            .one_or_none()
+        )
+
+        if cur_balance is None:
+            raise HTTPException(status_code=404, detail="User cannot be found")
+
+        if bet["resolved"] is False:
+            status = "pending"
+        else:
+            status = "active"
+
+        return BetResponse(
+            bet_id=bet["id"],
+            game_id=bet["game_id"],
+            team_bet_on=bet["name"],
+            amount=bet["amount"],
+            odds=bet["odds"],
+            potential_payout=bet["odds"] * bet["amount"],
+            status=status,
+            placed_at=bet["created_at"],
+            new_balance=cur_balance["balance"],
+        )
+
+
 class EarlyCashOutBet(BaseModel):
     bet_id: int
     game_id: int
