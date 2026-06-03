@@ -112,7 +112,6 @@ async def get_token_data(
     )
     try:
         payload = jwt.decode(token, secret_key, algorithm)
-
         user_id = payload.get("user_id")
         name = payload.get("name")
 
@@ -120,7 +119,6 @@ async def get_token_data(
             raise credentials_exception
 
     except InvalidTokenError as e:
-
         raise credentials_exception
 
     return TokenData(user_id=user_id, name=name)

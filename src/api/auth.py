@@ -1,12 +1,7 @@
-from typing import Annotated
 from sqlalchemy.exc import IntegrityError
-from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from fastapi import APIRouter, Depends, status
-from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel
-import sqlalchemy
+from fastapi import APIRouter
+
 from src.api.user_helper import *
 from src import database as db
 

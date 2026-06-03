@@ -3,6 +3,10 @@ from src.api import auth, games, bets, users, leaderboard
 
 tags_metadata = [
     {"name": "bets", "description": "make some money"},
+    {"name": "games", "description": "look for games"},
+    {"name": "user", "description": "check own comments/bets"},
+    {"name": "auth", "description": "create/login user"},
+    {"name": "leaderboard", "description": "check who made more money than you"},
 ]
 
 app = FastAPI(
@@ -12,14 +16,13 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
-app.include_router(bets.router)
-
 
 @app.get("/")
 def root():
     return {"status": "ok"}
 
 
+app.include_router(bets.router)
 app.include_router(auth.router)
 app.include_router(games.router)
 app.include_router(leaderboard.router)

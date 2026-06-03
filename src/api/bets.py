@@ -1,11 +1,6 @@
-from enum import Enum
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Annotated
-from datetime import datetime
-
-import random
-
 
 import sqlalchemy
 from src.api.user_helper import get_token_data, TokenData

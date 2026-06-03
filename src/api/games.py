@@ -133,8 +133,8 @@ def get_games(
     return SearchResponse(page=page, limit=limit, total=total, games=map_games(games))
 
 
-@router.get("/game_details", response_model=Description)
-def get_details(id: int):
+@router.get("/{game_id}", response_model=Description)
+def get_details(game_id: int):
 
     with db.engine.begin() as connection:
         info = connection.execute(
@@ -147,7 +147,7 @@ def get_details(id: int):
                     ON ateam.id = games.away_team_id
                 WHERE games.id = :id;
                 """),
-            {"id": id},
+            {"id": game_id},
         ).first()
     if info is None:
         raise HTTPException(status_code=404, detail="Game not found")
