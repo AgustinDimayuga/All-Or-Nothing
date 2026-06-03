@@ -253,7 +253,7 @@ This issue appeared in tables.py which was removed. The database was updated to 
 15. Authentication endpoints do not appear to implement rate limiting or brute-force protection
 
 We think that this issue is out of scope for our project as we want to keep our project simple 
-and implementing is out of scope for this course.
+and implementing this is out of scope for this course.
 
 
 

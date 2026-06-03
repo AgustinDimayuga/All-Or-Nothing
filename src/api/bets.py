@@ -41,10 +41,8 @@ def place_bet(
         raise HTTPException(
             status_code=400, detail="bet amount cannot be 0 or negative"
         )
-    elif new_bet.amount < 5 :
-        raise HTTPException(
-            status_code= 400 , detail= "Minimum bet amount is $5"
-        )
+    elif new_bet.amount < 5:
+        raise HTTPException(status_code=400, detail="Minimum bet amount is $5")
 
     with db.engine.begin() as connection:
 
@@ -130,7 +128,10 @@ def place_bet(
         ).scalar_one_or_none()
 
         if not cur_balance:
-            raise HTTPException(status_code=422, detail=f"Insufficient Funds\n Current Balance {cur_balance}")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Insufficient Funds\n Current Balance {cur_balance}",
+            )
 
         return BetResponse(
             bet_id=values["id"],
@@ -157,7 +158,7 @@ def get_bet(
         bet = (
             connection.execute(
                 sqlalchemy.text("""
-                SELECT *,
+                SELECT *, bets.id AS bet_id,
                 CASE
                     WHEN bets.team_id = games.home_team_id THEN games.home_odds
                     WHEN bets.team_id = games.away_team_id THEN games.away_odds
@@ -206,14 +207,14 @@ def get_bet(
             status = "active"
 
         return BetResponse(
-            bet_id=bet["id"],
+            bet_id=bet["bet_id"],
             game_id=bet["game_id"],
             team_bet_on=bet["name"],
             amount=bet["amount"],
             odds=bet["odds"],
             potential_payout=bet["odds"] * bet["amount"],
             status=status,
-            placed_at=bet["created_at"],
+            placed_at=str(bet["created_at"]),
             new_balance=cur_balance["balance"],
         )
 

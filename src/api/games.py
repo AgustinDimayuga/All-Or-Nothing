@@ -177,7 +177,7 @@ def post_comment(
     game_id: int,
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
 ):
-    profanity =["bitch","fuck"]
+    profanity = ["bitch", "fuck"]
 
     if not body:
         raise HTTPException(
@@ -187,17 +187,17 @@ def post_comment(
     with db.engine.begin() as connection:
 
         recent_comments = connection.execute(
-        sqlalchemy.text("""
+            sqlalchemy.text("""
             SELECT COUNT(*)
             FROM comments
             WHERE user_id = :user_id
             AND posted_at >= NOW() - INTERVAL '2 minute'
         """),
-        {"user_id": current_token_data.user_id},
+            {"user_id": current_token_data.user_id},
         ).scalar()
 
-        if recent_comments != None :
-            if recent_comments >= 5 :
+        if recent_comments != None:
+            if recent_comments >= 5:
                 raise HTTPException(
                     status_code=429,
                     detail={
@@ -206,12 +206,14 @@ def post_comment(
                     },
                 )
 
+        words_body = body.split(" ")
+
         for words in profanity:
-            for word in body:
-                if words == word:
-                    raise HTTPException (
-                        status_code= 400,
-                        detail= "All or Nothing does not support profanity :)"
+            for word in words_body:
+                if word == words:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="All or Nothing does not support profanity :)",
                     )
 
         comment = connection.execute(
