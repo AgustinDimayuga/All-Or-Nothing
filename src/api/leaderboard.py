@@ -41,8 +41,6 @@ def get_leaderboard(
         users = (
             connection.execute(
                 sqlalchemy.text("""
-
-
                     SELECT
                             users.id,
                             users.username,
