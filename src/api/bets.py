@@ -201,10 +201,12 @@ def get_bet(
         if cur_balance is None:
             raise HTTPException(status_code=404, detail="User cannot be found")
 
+        print(bet["resolved"])
+
         if bet["resolved"] is False:
             status = "pending"
         else:
-            status = "active"
+            status = "resolved"
 
         return BetResponse(
             bet_id=bet["bet_id"],
