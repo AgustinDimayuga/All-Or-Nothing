@@ -139,7 +139,7 @@ def get_details(id: int):
     with db.engine.begin() as connection:
         info = connection.execute(
             sqlalchemy.text("""
-                SELECT games.id as id, games.league_id as league_id, hteam.name AS home, ateam.name as away, date, games.location as location, home_odds, away_odds 
+                SELECT games.id as id, games.league_id as league_id, hteam.name AS home, ateam.name as away, date, games.location as location, home_odds, away_odds
                 FROM games
                 JOIN teams AS hteam
                     ON hteam.id = games.home_team_id
@@ -177,6 +177,7 @@ def post_comment(
     game_id: int,
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
 ):
+    profanity =["bitch","fuck"]
 
     if not body:
         raise HTTPException(
@@ -184,6 +185,35 @@ def post_comment(
             detail={"error_code": "INVALID_COMMENT", "message": "Body cannot be empty"},
         )
     with db.engine.begin() as connection:
+
+        recent_comments = connection.execute(
+        sqlalchemy.text("""
+            SELECT COUNT(*)
+            FROM comments
+            WHERE user_id = :user_id
+            AND posted_at >= NOW() - INTERVAL '2 minute'
+        """),
+        {"user_id": current_token_data.user_id},
+        ).scalar()
+
+        if recent_comments != None :
+            if recent_comments >= 5 :
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error_code": "RATE_LIMIT_EXCEEDED",
+                        "message": "Too many comments. Please wait before posting again.",
+                    },
+                )
+
+        for words in profanity:
+            for word in body:
+                if words == word:
+                    raise HTTPException (
+                        status_code= 400,
+                        detail= "All or Nothing does not support profanity :)"
+                    )
+
         comment = connection.execute(
             sqlalchemy.text("""
             INSERT INTO COMMENTS (user_id,body,game_id)
@@ -229,10 +259,10 @@ def get_comments(
         comments = (
             connection.execute(
                 sqlalchemy.text("""
-            SELECT c.id AS comment_id, c.user_id, u.name AS username, c.body, c.posted_at 
+            SELECT c.id AS comment_id, c.user_id, u.name AS username, c.body, c.posted_at
             FROM games
             JOIN "comments" c ON c.game_id = games.id
-            JOIN users u  ON c.user_id = u.id 
+            JOIN users u  ON c.user_id = u.id
             WHERE games.id = :game_id
             ORDER BY c.posted_at ASC
             OFFSET :offset
