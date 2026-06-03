@@ -1,4 +1,3 @@
-from datetime import datetime
 import sqlalchemy
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
