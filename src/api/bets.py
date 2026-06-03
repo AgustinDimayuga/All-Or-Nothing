@@ -127,7 +127,7 @@ def place_bet(
             [{"user_id": user_id, "amount": new_bet.amount}],
         ).scalar_one_or_none()
 
-        if not cur_balance:
+        if cur_balance is None:
             raise HTTPException(
                 status_code=422,
                 detail=f"Insufficient Funds\n Current Balance {cur_balance}",
