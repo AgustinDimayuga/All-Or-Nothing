@@ -52,7 +52,7 @@ def map_games(games: Sequence[RowMapping]):
 
 
 class League(str, Enum):
-    NLB = "nlb"
+    MLB = "mlb"
     WORLD_CUP = "world_cup"
 
 
@@ -71,12 +71,12 @@ def get_games(
 ) -> list[Games]:
     offset = (page - 1) * limit
 
-    if status == 'upcoming':
-        interval = 'NOW() < games.date'
+    if status == "upcoming":
+        interval = "NOW() < games.date"
 
-    elif status == 'live':
+    elif status == "live":
         interval = "NOW() < games.date + INTERVAL '2 hours' AND games.date <= NOW()"
-    
+
     else:
         interval = "games.date + INTERVAL '2 hours' <= NOW()"
 
