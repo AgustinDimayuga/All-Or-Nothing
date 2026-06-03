@@ -130,7 +130,7 @@ def place_bet(
         if not cur_balance:
             raise HTTPException(
                 status_code=422,
-                detail=f"Insufficient Funds\n Current Balance {cur_balance}",
+                detail=f"Insufficient Funds Current Balance {cur_balance}",
             )
 
         return BetResponse(

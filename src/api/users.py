@@ -189,7 +189,7 @@ def withdraw_money(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
 ):
 
-    if body.amount < 0:
+    if body.amount <= 0:
         raise HTTPException(status_code=400, detail="Invalid withdraw amount")
 
     with db.engine.begin() as connection:
@@ -206,7 +206,7 @@ def withdraw_money(
             sqlalchemy.text("""
             UPDATE user_balances
             SET balance = balance - :amount
-            WHERE user_id = :user_id AND balance >= :amount 
+            WHERE user_id = :user_id AND balance >= :amount
             RETURNING BALANCE
             """),
             {"user_id": current_token_data.user_id, "amount": body.amount},
@@ -214,5 +214,47 @@ def withdraw_money(
 
         if balance is None:
             raise HTTPException(status_code=422, detail="Insufficient Funds")
+
+    return SuccessfullWithdraw(curr_balance=balance)
+
+
+class SuccessfullDeposit(BaseModel):
+    curr_balance: float
+
+
+class DepositRequest(BaseModel):
+    amount: float
+
+
+@router.post("/me/deposit")
+def deposit_money(
+    body: DepositRequest,
+    current_token_data: Annotated[TokenData, Depends(get_token_data)],
+):
+
+
+    with db.engine.begin() as connection:
+
+        connection.execute(
+            sqlalchemy.text("""
+                INSERT INTO wallet (user_id,change)
+                VALUES(:user_id,:amount)
+                """),
+            {"user_id": current_token_data.user_id, "amount": body.amount },
+        )
+
+        balance = connection.execute(
+            sqlalchemy.text("""
+            UPDATE user_balances
+            SET balance = balance + :amount
+            WHERE user_id = :user_id
+            RETURNING BALANCE
+            """),
+            {"user_id": current_token_data.user_id, "amount": body.amount},
+        ).scalar_one_or_none()
+
+        if balance is None:
+
+            raise HTTPException(status_code=422, detail= "Erro Depositing")
 
     return SuccessfullWithdraw(curr_balance=balance)
