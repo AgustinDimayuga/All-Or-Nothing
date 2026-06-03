@@ -30,7 +30,9 @@ Creates a new user account with a starting balance of virtual currency.
 ```json
 {
   "username": "sportzfan99",
+  "name": "sportzfan",
   "email": "sportzfan99@example.com",
+  "phone": "1234567890",
   "password": "SecurePass123!"
 }
 ```
@@ -38,11 +40,8 @@ Creates a new user account with a starting balance of virtual currency.
 **Response `201 Created`:**
 ```json
 {
-  "user_id": "u_4f8a2c1b",
-  "username": "sportzfan99",
-  "email": "sportzfan99@example.com",
-  "balance": 1000.00,
-  "created_at": "2025-04-15T10:30:00Z" */ in year-month-day:timestamp format */ ⏲️
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3LCJuYW1lIjoic3BvcnR6ZmFuIiwiZXhwIjoxNzgwMzg5ODYzfQ.ZPz53g8eD-nHztoblVHdGZGzi9XNnmgMhZbWEEtkSS4",
+  "token_type": "bearer"
 }
 ```
 
@@ -78,17 +77,6 @@ Authenticates an existing user and returns a session token used in the `Authoriz
 - `401 Unauthorized` — invalid credentials
 - `422 Unprocessable Entity` — missing fields
 
----
-
-### `DELETE /auth/tokens`
-
-Invalidates the current session token.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response `204 No Content`**
-
----
 
 ## 2. Users
 
@@ -223,6 +211,7 @@ Returns a list of live and upcoming games available for betting. Optionally filt
 ```
 
 **Errors:**
+- `400 Bad Request` - Invalid inputs for page or limit 
 - `503 Service Unavailable` — live game data source is unreachable
 
 ---
@@ -301,7 +290,6 @@ Places a new bet on behalf of the authenticated user. Deducts the wager amount f
 - `400 Bad Request` — amount is zero or negative
 - `403 Forbidden` — betting has closed (game already started)
 - `404 Not Found` — game does not exist
-- `409 Conflict` — duplicate bet submission detected
 - `422 Unprocessable Entity` — insufficient balance
 
 ---
@@ -401,7 +389,7 @@ Returns a ranked list of users by net virtual currency earnings (total winnings 
 **Query Parameters:**
 | Parameter  | Type   | Default | Description                               |
 |------------|--------|---------|-------------------------------------------|
-| `period`   | string | all     | Filter by `daily`, `weekly`, `monthly`, `all` |
+| `period`   | string | all     | Filter by `daily`, `weekly`, `all` |
 | `limit`    | int    | 25      | Number of users to return (max 100)       |
 
 **Response `200 OK`:**
@@ -510,67 +498,7 @@ Deletes a comment. Users may only delete their own comments.
 
 ---
 
-## 7. Notifications
-
-### `GET /users/{user_id}/notifications`
-
-Returns a list of notifications for the authenticated user, such as bet resolution results (win/loss) and balance updates.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Query Parameters:**
-| Parameter | Type    | Default | Description                    |
-|-----------|---------|---------|--------------------------------|
-| `read`    | boolean | false   | Filter to only unread if `false` |
-| `page`    | int     | 1       | Page number                    |
-| `limit`   | int     | 20      | Results per page               |
-
-**Response `200 OK`:**
-```json
-{
-  "user_id": "u_4f8a2c1b",
-  "page": 1,
-  "limit": 20,
-  "total_unread": 2,
-  "notifications": [
-    {
-      "notification_id": "n_3c5e7a9b",
-      "type": "bet_resolved",
-      "message": "Your bet on the Lakers won! You earned $92.50.",
-      "bet_id": "b_9c3e7d2a",
-      "read": false,
-      "created_at": "2025-04-15T22:16:00Z" */ in year-month-day:timestamp format */ ⏲️
-    }
-  ]
-}
-```
-
----
-
-### `PATCH /users/{user_id}/notifications/{notification_id}`
-
-Marks a single notification as read.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Request:**
-```json
-{
-  "read": true
-}
-```
-
-**Response `200 OK`:**
-```json
-{
-  "notification_id": "n_3c5e7a9b",
-  "read": true
-}
-```
-
----
-
-## 8. Error Responses
+## 7. Error Responses
 
 All errors follow a consistent envelope format:
 

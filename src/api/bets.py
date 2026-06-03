@@ -1,11 +1,6 @@
-from enum import Enum
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Annotated
-from datetime import datetime
-
-import random
-
 
 import sqlalchemy
 from src.api.user_helper import get_token_data, TokenData
@@ -46,14 +41,16 @@ def place_bet(
         raise HTTPException(
             status_code=400, detail="bet amount cannot be 0 or negative"
         )
+    elif new_bet.amount < 5:
+        raise HTTPException(status_code=400, detail="Minimum bet amount is $5")
 
     with db.engine.begin() as connection:
 
         get_odds = (
             connection.execute(
                 sqlalchemy.text("""
-                SELECT * 
-                FROM (SELECT home_team_id, away_team_id, home_odds, away_odds, teams.id AS team_id,      
+                SELECT *
+                FROM (SELECT home_team_id, away_team_id, home_odds, away_odds, teams.id AS team_id,
                         CASE
                             WHEN NOW() < date THEN 'upcoming'
                             WHEN NOW() < date + INTERVAL '2 hours' THEN 'live'
@@ -123,15 +120,18 @@ def place_bet(
             sqlalchemy.text("""
                 UPDATE user_balances
                 SET balance = balance - :amount
-                WHERE user_id = :user_id AND balance >= :amount 
+                WHERE user_id = :user_id AND balance >= :amount
                 RETURNING BALANCE
-                
+
                 """),
             [{"user_id": user_id, "amount": new_bet.amount}],
         ).scalar_one_or_none()
 
         if not cur_balance:
-            raise HTTPException(status_code=422, detail="Insufficient Funds")
+            raise HTTPException(
+                status_code=422,
+                detail=f"Insufficient Funds\n Current Balance {cur_balance}",
+            )
 
         return BetResponse(
             bet_id=values["id"],
@@ -143,6 +143,81 @@ def place_bet(
             status="active",
             placed_at=str(values["created_at"]),
             new_balance=cur_balance,
+        )
+
+
+@router.get("/{bet_id}", response_model=BetResponse)
+def get_bet(
+    current_token_data: Annotated[TokenData, Depends(get_token_data)], bet_id: int
+):
+
+    with db.engine.begin() as connection:
+
+        user_id = current_token_data.user_id
+
+        bet = (
+            connection.execute(
+                sqlalchemy.text("""
+                SELECT *, bets.id AS bet_id,
+                CASE
+                    WHEN bets.team_id = games.home_team_id THEN games.home_odds
+                    WHEN bets.team_id = games.away_team_id THEN games.away_odds
+                END AS odds
+                FROM bets
+                JOIN games ON bets.game_id = games.id
+                JOIN teams ON bets.team_id = teams.id
+                WHERE bets.id = :bet_id
+                """),
+                [{"bet_id": bet_id}],
+            )
+            .mappings()
+            .one_or_none()
+        )
+
+        if bet is None:
+            raise HTTPException(
+                status_code=404, detail="Bet not found, please select another bet"
+            )
+
+        if bet["user_id"] != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="This bet belongs to another user, please select another bet",
+            )
+
+        cur_balance = (
+            connection.execute(
+                sqlalchemy.text("""
+                SELECT balance
+                FROM user_balances
+                WHERE user_id = :user_id
+                """),
+                [{"user_id": user_id}],
+            )
+            .mappings()
+            .one_or_none()
+        )
+
+        if cur_balance is None:
+            raise HTTPException(status_code=404, detail="User cannot be found")
+
+        print(bet["resolved"])
+
+        if bet["resolved"] is False:
+            status = "pending"
+        else:
+            status = "resolved"
+
+        return BetResponse(
+            bet_id=bet["bet_id"],
+            game_id=bet["game_id"],
+            team_bet_on=bet["name"],
+            amount=bet["amount"],
+            odds=bet["odds"],
+            potential_payout=bet["odds"] * bet["amount"],
+            status=status,
+            placed_at=str(bet["created_at"]),
+            new_balance=cur_balance["balance"],
         )
 
 

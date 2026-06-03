@@ -1,12 +1,7 @@
-from typing import Annotated
 from sqlalchemy.exc import IntegrityError
-from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from fastapi import APIRouter, Depends, status
-from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel
-import sqlalchemy
+from fastapi import APIRouter
+
 from src.api.user_helper import *
 from src import database as db
 
@@ -29,7 +24,7 @@ class PostUser(BaseModel):
     password: str
 
 
-@router.post("/users", response_model=Token)
+@router.post("/users", response_model=Token, status_code=200)
 def create_user(user: PostUser):
 
     try:

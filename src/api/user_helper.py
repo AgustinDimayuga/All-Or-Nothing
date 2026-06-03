@@ -40,7 +40,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/tokens")
 DUMMY_HASH = password_hash.hash("dummypassword")
 
 
-def verify_passwword(plain_pass, hashed_password):
+def verify_password(plain_pass, hashed_password):
     return password_hash.verify(plain_pass, hashed_password)
 
 
@@ -81,11 +81,11 @@ def get_user_creds(connection: sqlalchemy.Connection, username: str) -> UserCred
 
 def authenticate_user(connection: sqlalchemy.Connection, username: str, password: str):
     user = get_user_creds(connection, username)
-    ## Protect Against time attackks
+    ## Protect Against time attacks
     if not user:
-        verify_passwword(password, DUMMY_HASH)
+        verify_password(password, DUMMY_HASH)
         return False
-    if not verify_passwword(password, user.hashed_password):
+    if not verify_password(password, user.hashed_password):
         return False
     return user
 
@@ -112,7 +112,6 @@ async def get_token_data(
     )
     try:
         payload = jwt.decode(token, secret_key, algorithm)
-        print(payload)
         user_id = payload.get("user_id")
         name = payload.get("name")
 
@@ -120,7 +119,6 @@ async def get_token_data(
             raise credentials_exception
 
     except InvalidTokenError as e:
-        print(e)
         raise credentials_exception
 
     return TokenData(user_id=user_id, name=name)
