@@ -29,7 +29,7 @@ class PostUser(BaseModel):
     password: str
 
 
-@router.post("/users", response_model=Token, status_code=201)
+@router.post("/users", response_model=Token, status_code=200)
 def create_user(user: PostUser):
 
     try:

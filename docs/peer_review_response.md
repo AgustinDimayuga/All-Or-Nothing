@@ -134,3 +134,46 @@ API Specs
 13. For class League in games.py, MLB is spelled wrong (written as NLB)
 
       a. Changes have been made to Database
+## Davis API Design Comments
+1. The workflow examples have NBA but the actual available games don't match during testing
+
+      a. Shortly after we Inserted more games which changed some things
+
+2. Some workflows were missing required bearing token in request examples that caused authentication errors during testing
+
+      a. The workflow was created before fully implementing the most updated version and there for the errors
+
+3. In your APISpec.md, your POST auth/users has a 201 Response but testing returned 200
+
+      a. Function has be changed to reflect  flow
+4. For your error responses in APISpec, you have much more detail error responses than the ones in testing. I would use the original error messages.
+
+      a. For user simplicity we decided to keep the messages simpler, although we are realizing that some of the responses are too simple
+
+5. POST/bets/resolve in mentioned in APISpec but not in testing
+
+      a. We decided to let a cronjob do that and therefore that spec because irrelevant
+
+6. Money values should use Decimal instead of float to avoid rounding problems
+
+      a. Already Addressed Above
+7. The comments table in the APISpec should include the game_id also.
+
+      a. database has been changed to reflect this concern
+8. The notification endpoints were listed in APISpec but not in testing
+
+      a. At first we intended to do notifcations but for the sake of simplicity we decided to scratch that idea and let the user check based on when the game had ended
+9. "409 Conflict — duplicate bet submission detected" is never explained in the APISpec what they do to prevent this
+
+      a. While creating the project we realized that users should be able to bet on a team as much times as they want
+
+      (sort of like when you can place the same parlay if that is a users intention)
+10. The APISpec and Example Workflows use game_id as "g_1a2b3c4d" but in testing, it can only take integers
+
+      a. the game_id was a place_holder value as an example for people who actually want to bet then it would be the game id of whatever game they would like to bet on
+11. APISpec says leaderboard can have a monthly and all period but testing only shows daily/weekly
+
+      a. we just thought a monthly leader board would not be as satisfactory for a user a weekly leaderboard so we just did not include it
+12. Validation rules for usernames, passwords, emails, and phone numbers could be better explained in APISpec
+
+      a. The API spec held some factors that had been changed since the commit, but we should have updated it
