@@ -65,7 +65,7 @@ def get_leaderboard(
 
     leaderboard = [
         LeaderboardEntry(
-            rank= i+1,
+            rank=i + 1,
             user_id=user["id"],
             username=user["username"],
             net_earnings=float(user["net_earnings"]),
