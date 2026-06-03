@@ -189,7 +189,7 @@ def withdraw_money(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
 ):
 
-    if body.amount < 0:
+    if body.amount <= 0:
         raise HTTPException(status_code=400, detail="Invalid withdraw amount")
 
     with db.engine.begin() as connection:
