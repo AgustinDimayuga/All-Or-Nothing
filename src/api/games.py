@@ -70,7 +70,7 @@ class Status(str, Enum):
 
 @router.get("/", response_model=SearchResponse)
 def get_games(
-    league: League = League.NLB,
+    league: League = League.MLB,
     status: Status = Status.upcoming,
     page: int = 1,
     limit: int = 20,
