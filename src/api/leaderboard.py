@@ -1,4 +1,3 @@
-from datetime import datetime
 import sqlalchemy
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
@@ -42,17 +41,18 @@ def get_leaderboard(
             connection.execute(
                 sqlalchemy.text("""
                     SELECT
-                        users.id,
-                        users.username,
-                        COALESCE(SUM(wallet.change), 0) AS net_earnings
-                    FROM users
-                    JOIN wallet ON users.id = wallet.user_id
-                    JOIN bets ON wallet.from_bet = bets.id
-                    WHERE wallet.from_bet IS NOT NULL
-                      AND bets.created_at >= NOW() - CAST(:interval AS INTERVAL)
-                    GROUP BY users.id, users.username
-                    ORDER BY net_earnings DESC
-                    LIMIT :limit
+                            users.id,
+                            users.username,
+                            COALESCE(SUM(wallet.change), 0) AS net_earnings
+                        FROM users
+                        JOIN wallet ON users.id = wallet.user_id
+                        JOIN bets ON wallet.from_bet = bets.id
+                        WHERE wallet.from_bet IS NOT NULL
+                          AND bets.created_at >= NOW() - CAST(:interval AS INTERVAL)
+                        GROUP BY users.id, users.username
+                        ORDER BY net_earnings DESC
+                        LIMIT :limit
+
                 """),
                 {"interval": interval, "limit": limit},
             )
