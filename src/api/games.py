@@ -256,6 +256,15 @@ def get_comments(
     page: int = 1,
     limit: int = 20,
 ) -> list[Comment]:
+
+    if page < 1:
+        raise HTTPException(status_code=400, detail="Page number cannot be less than 1")
+
+    if limit <= 0:
+        raise HTTPException(status_code=400, detail="Limit cannot be 0 or negative")
+    elif limit > 100:
+        raise HTTPException(status_code=400, detail="Limit cannot be over 100")
+
     offset = (page - 1) * limit
     with db.engine.begin() as connection:
         comments = (
