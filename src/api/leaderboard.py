@@ -63,34 +63,6 @@ def get_leaderboard(
             .all()
         )
 
-    # WITH Initial AS (
-    #                     SELECT
-    #                     users.id AS id ,
-    #                     users.username AS username,
-    #                     COUNT(bets.id) AS bet_total,
-    #                     COALESCE(SUM(wallet.change), 0) AS net_earnings
-    #                     FROM users
-    #                     JOIN wallet ON users.id = wallet.user_id
-    #                     JOIN bets ON wallet.from_bet = bets.id
-    #                     WHERE wallet.from_bet IS NOT NULL
-    #                         AND bets.created_at >= NOW() - CAST(:interval AS INTERVAL)
-    #                     GROUP BY users.id, users.username
-
-    #                         ),
-    #                 r AS(
-    #                     SELECT * , RANK() OVER (ORDER BY net_earnings DESC, bet_total DESC) AS ranking
-    #                     FROM Initial
-    #                         )
-
-    #                 SELECT id, username, net_earnings , ranking
-    #                 FROM r
-    #                 ORDER BY ranking ASC
-    #                 LIMIT :limit
-    # print("hi")
-    # print(users)
-    # print(len(users))
-    # for user in users:
-    #     print(user["username"])
     leaderboard = [
         LeaderboardEntry(
             rank= i+1,
