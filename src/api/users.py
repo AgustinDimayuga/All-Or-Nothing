@@ -232,6 +232,8 @@ def deposit_money(
     current_token_data: Annotated[TokenData, Depends(get_token_data)],
 ):
 
+    if body.amount <= 0:
+        raise HTTPException(status_code=400, detail="Cannot Deposit negative amount or 0")
 
     with db.engine.begin() as connection:
 
